@@ -47,8 +47,8 @@ export default {
             COUNTRIES_TEXT_ROT: [],
             COUNTRIES_TEXT_POS: [],
 
-            COUNTRIES_TEXT_HEIGHT: 0.03,
-            COUNTRIES_TEXT_HEIGHT_MAX: 0.125,
+            ADAPTIVE_TEXT_HEIGHT_MIN: 0.02,
+            ADAPTIVE_TEXT_HEIGHT_MAX: 0.05,
             COUNTRIES_POINT:[],
 
             CITIES_TEXT: [],
@@ -59,7 +59,9 @@ export default {
 
             GEO_POINTS: [],
 
-            
+            // THREEJS-OBJECT REFERENCES
+
+            GRIDHELPER: null,             
 
             MAT_BASIC_BLACK: new THREE.MeshBasicMaterial({color: 0x000000}),
             MAT_BASIC_RED: new THREE.MeshBasicMaterial({color: 0xff0000}),
@@ -166,8 +168,8 @@ export default {
 
             this.scene.background = this.COL_OCEAN;
 
-            let gridHelper = new THREE.GridHelper(60, 150, new THREE.Color(0xff0000), new THREE.Color(0xffffff));
-            this.scene.add(gridHelper);
+            this.GRIDHELPER = new THREE.GridHelper(60, 150, new THREE.Color(0xff0000), new THREE.Color(0xffffff));
+            this.scene.add(this.GRIDHELPER);
 
 
             let light0 = new THREE.AmbientLight(0xfafafa, 0.005);
@@ -209,14 +211,14 @@ export default {
 
         animateToCamera: function(){
 
-
             // OPACITY, HEIGHT
-            for(let m=0; m < this.COUNTRIES_TEXT.length; m++){
 
-                // COUNTRY NAME OPACITY 
-                this.COUNTRIES_TEXT[m].material.opacity = this.clamp(this.camera.position.y, 0, 3.5)/3.85+0.25;
-                 // COUNTRY NAME HEIGHT
-                this.COUNTRIES_TEXT[m].position.y = this.clamp((( 1 - (this.clamp(this.camera.position.y, 0, 3.85) / 3.85 )) * this.COUNTRIES_TEXT_HEIGHT_MAX),this.COUNTRIES_TEXT_HEIGHT, this.COUNTRIES_TEXT_HEIGHT_MAX );
+            for(let m=0; m < this.COUNTRIES_TEXT.length; m++){
+                this.COUNTRIES_TEXT[m].material.opacity = this.clamp(this.camera.position.y, 0, 3.5)/3.85;
+            }
+
+            for(let m=0; m < this.CITIES_TEXT.length; m++){
+                this.CITIES_TEXT[m].position.y = this.clamp((( 1 - (this.clamp(this.camera.position.y, 0, 3.85) / 3.85 )) * this.ADAPTIVE_TEXT_HEIGHT_MAX),this.ADAPTIVE_TEXT_HEIGHT_MIN, this.ADAPTIVE_TEXT_HEIGHT_MAX );
             }
 
             // ROTATION
@@ -369,7 +371,7 @@ export default {
                                     let textMesh = new THREE.Mesh(textGeometry, textMaterial);
                                     textMesh.position.x = -coordinates[1];
                                     textMesh.position.z = -coordinates[0];
-                                    textMesh.position.y = this.COUNTRIES_TEXT_HEIGHT; // HEIGHT
+                                    textMesh.position.y = this.ADAPTIVE_TEXT_HEIGHT_MIN; // HEIGHT
                                     textMesh.rotateX(Math.PI/2);
                                     textMesh.rotateZ(Math.PI);  
                                     textMesh.rotateY(Math.PI);
