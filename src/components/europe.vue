@@ -171,6 +171,8 @@ export default {
             this.GRIDHELPER = new THREE.GridHelper(60, 150, new THREE.Color(0xff0000), new THREE.Color(0xffffff));
             this.scene.add(this.GRIDHELPER);
 
+            this.scene.fog = new THREE.Fog(this.COL_OCEAN, 0.001, 12);
+
 
             let light0 = new THREE.AmbientLight(0xfafafa, 0.005);
             let light1 = new THREE.PointLight(0xfafafa, 0.005);
