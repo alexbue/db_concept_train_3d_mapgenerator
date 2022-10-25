@@ -23,6 +23,7 @@ export default {
             camera: null,
             scene: new THREE.Scene(),
             renderer: null,
+            
             mesh: null,
             controls: null,
             iR: null,
@@ -35,6 +36,59 @@ export default {
             SCALE: 1000000,
 
             k: 0,
+
+            FONTLOADER: new FontLoader(),
+            TTFLOADER: new TTFLoader(),
+
+            OBJ_HEIGHT_DEFAULT: 0.025,
+
+            COUNTRIES_MESH: [],
+            COUNTRIES_TEXT: [],
+            COUNTRIES_TEXT_ROT: [],
+            COUNTRIES_TEXT_POS: [],
+
+            COUNTRIES_TEXT_HEIGHT: 0.03,
+            COUNTRIES_TEXT_HEIGHT_MAX: 0.125,
+            COUNTRIES_POINT:[],
+
+            CITIES_TEXT: [],
+            CITIES_TEXT_ROT: [],
+            CITIES_TEXT_POS: [],            
+
+            GEO_POINT: new THREE.BoxGeometry(0.005, 0.005, 0.005),
+
+            GEO_POINTS: [],
+
+            
+
+            MAT_BASIC_BLACK: new THREE.MeshBasicMaterial({color: 0x000000}),
+            MAT_BASIC_RED: new THREE.MeshBasicMaterial({color: 0xff0000}),
+
+            MAT_NAME_OPAQUE: new THREE.MeshBasicMaterial({color: 0x484848, transparent: true, opacity: 1}),
+
+            COL_OCEAN: new THREE.Color(0xabd8ea),
+            COL_TARGET : new THREE.Color(0xF8F8FF), // white
+            COL_REST: new THREE.Color(0xCCFF0CC), // green
+            COL_EDGES: new THREE.Color(0x97B49C), // dark green
+
+
+            COL_FONT: new THREE.Color(0x484848), // gray
+            COL_FONT2: new THREE.Color(0xff0000), // red
+
+            COLORMAPS: [
+                new THREE.Color(0xFFADAD), 
+                new THREE.Color(0xFFD6A5), //orange
+                new THREE.Color(0xFDFFB6), // yellow
+                new THREE.Color(0xCAFFBF), // green
+                new THREE.Color(0x9BF6FF), // aqua
+                new THREE.Color(0xA0C4FF), // pastell-blue
+                new THREE.Color(0xBDB2FF), // violet
+                new THREE.Color(0xFFC6FF), // pastell-pink
+                new THREE.Color(0xFF00FC), // neon pink
+                new THREE.Color(0xff5d8f), // pastell pink 2
+                new THREE.Color(0xffeedd), // pastell-orange
+                new THREE.Color(0xff686b), // green 2 
+            ],
 
             COUNTRIES: [
                 "Germany",
@@ -56,44 +110,33 @@ export default {
                 "Slovakia",
             ],
 
-            COUNTRIES_MESH: [],
-            COUNTRIES_TEXT: [],
-            COUNTRIES_TEXT_ROT: [],
-            COUNTRIES_TEXT_POS: [],
-            COUNTRIES_TEXT_HEIGHT: 0.09,
-            COUNTRIES_POINT:[],
+            TRAIN_STATIONS: [
+                "München Hbf",
+                "Frankfurt (Main) Hbf",
+                "Nürnberg",
+                "Leipzig",
+                "Stuttgart",
+                "Augsburg",
+            ],
 
-            GEO_POINT: new THREE.BoxGeometry(0.005, 0.005, 0.005),
-
-            MAT_BASIC_BLACK: new THREE.MeshBasicMaterial({color: 0x000000}),
-
-            COL_OCEAN: new THREE.Color(0xabd8ea),
-            COL_TARGET : new THREE.Color(0xF8F8FF), // white
-            COL_REST: new THREE.Color(0xCCFF0CC), // green
-            COL_EDGES: new THREE.Color(0x97B49C), // dark green
-            COL_FONT: new THREE.Color(0x484848), // gray
-            COL_FONT2: new THREE.Color(0xff0000), // red
-
-            COLORMAPS: [
-                new THREE.Color(0xFFADAD), 
-                new THREE.Color(0xFFD6A5), //orange
-                new THREE.Color(0xFDFFB6), // yellow
-                new THREE.Color(0xCAFFBF), // green
-                new THREE.Color(0x9BF6FF), // aqua
-                new THREE.Color(0xA0C4FF), // pastell-blue
-                new THREE.Color(0xBDB2FF), // violet
-                new THREE.Color(0xFFC6FF), // pastell-pink
-                new THREE.Color(0xFF00FC), // neon pink
-                new THREE.Color(0xff5d8f), // pastell pink 2
-                new THREE.Color(0xffeedd), // pastell-orange
-                new THREE.Color(0xff686b), // green 2 
-         ],
+            CITIES: [
+                "München",
+                "Frankfurt",
+                "Nürnberg",
+                "Leipzig",
+                "Stuttgart",
+                "Augsburg",
+            ],
 
         }
 
     },
 
     methods: {
+
+        clamp: function(num, min, max){
+           return Math.min(Math.max(num, min), max);
+        },
 
         init: function () {
 
@@ -149,37 +192,7 @@ export default {
             this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.25;
             this.controls.screenSpacePanning = false;
-            this.controls.maxDistance = 80;
-
-            // POINT 
-            let geometry = new THREE.BoxGeometry(0.005, 0.005, 0.005);
-            let material = new THREE.MeshBasicMaterial({color: 0xff0000});
-            let mesh = new THREE.Mesh(geometry, material);
-            mesh.position.y = 0.1;
-            this.scene.add(mesh);
-
-
-            // // FONT 
-            // let fontloader = new FontLoader();
-            // let ttfLoader = new TTFLoader();
-
-            // ttfLoader.load(DBSANS, (json) => {
-            //     // First parse the font.
-            //     let dbsans = fontloader.parse(json);
-            //     // Use parsed font as normal.
-            //     let textGeometry = new TextGeometry('hello world', { height: 0.005, size: 0.005, font: dbsans });
-            //     let textMaterial = new THREE.MeshBasicMaterial({ color: this.COL_FONT } );
-            //     let textMesh = new THREE.Mesh(textGeometry, textMaterial);
-            //     textMesh.position.x = 0.0075; // RIGHT-LEFT
-            //     textMesh.position.z =  0.002; // Up-DOWN
-            //     textMesh.position.y = 0.1; // HEIGHT
-            //     textMesh.rotateX(Math.PI/2);
-            //     textMesh.rotateZ(Math.PI);  
-            //     textMesh.rotateY(Math.PI);   
-            //     this.scene.add(textMesh);
-
-            // });
-     
+            this.controls.maxDistance = 80;    
             
             
         },
@@ -191,44 +204,120 @@ export default {
             // this.mesh.rotation.y += 0.02;
             this.renderer.render(this.scene, this.camera);
             this.controls.update();
-            this.faceTowardsCamera();
+            this.animateToCamera();
         },
 
-        faceTowardsCamera: function(){
+        animateToCamera: function(){
+
+
+            // OPACITY, HEIGHT
+            for(let m=0; m < this.COUNTRIES_TEXT.length; m++){
+
+                // COUNTRY NAME OPACITY 
+                this.COUNTRIES_TEXT[m].material.opacity = this.clamp(this.camera.position.y, 0, 3.5)/3.85+0.25;
+                 // COUNTRY NAME HEIGHT
+                this.COUNTRIES_TEXT[m].position.y = this.clamp((( 1 - (this.clamp(this.camera.position.y, 0, 3.85) / 3.85 )) * this.COUNTRIES_TEXT_HEIGHT_MAX),this.COUNTRIES_TEXT_HEIGHT, this.COUNTRIES_TEXT_HEIGHT_MAX );
+            }
+
+            // ROTATION
             if (this.camera.position.y <= 3.85){
 
                 if (this.camera.position.y <= 1.75){
 
+                    // COUNTRY NAMES
                     for(let m=0; m < this.COUNTRIES_TEXT.length; m++){
                         this.COUNTRIES_TEXT[m].lookAt(this.camera.position);
-
+                    }
+                    // CITY NAMES
+                    for(let m=0; m < this.CITIES_TEXT.length; m++){
+                        this.CITIES_TEXT[m].lookAt(this.camera.position);
                     }
                 }
                 else{
-
+                    
+                    // COUNTRY NAMES
                     for(let m=0; m < this.COUNTRIES_TEXT.length; m++){
                         this.COUNTRIES_TEXT[m].lookAt(this.camera.position);
                         this.COUNTRIES_TEXT[m].rotation.z = this.camera.rotation.z;
+                    }
+                    // CITY NAMES
+                    for(let m=0; m < this.CITIES_TEXT.length; m++){
+                        this.CITIES_TEXT[m].lookAt(this.camera.position);
+                        this.CITIES_TEXT[m].rotation.z = this.camera.rotation.z;
                     }
                 }
              
             }
             else{
-                for(let m=0; m < this.COUNTRIES_TEXT.length; m++){
-                    
+                // COUNTRY NAMES
+                for(let m=0; m < this.COUNTRIES_TEXT.length; m++){                    
                     this.COUNTRIES_TEXT[m].rotation.x = this.COUNTRIES_TEXT_ROT[m][0];
                     this.COUNTRIES_TEXT[m].rotation.y = this.COUNTRIES_TEXT_ROT[m][1];
                     // this.COUNTRIES_TEXT[m].rotation.z = this.COUNTRIES_TEXT_ROT[m][2];
-                    this.COUNTRIES_TEXT[m].rotation.z = this.camera.rotation.z;
-
-                   
+                    this.COUNTRIES_TEXT[m].rotation.z = this.camera.rotation.z;                   
+                }
+                // CITY NAMES
+                for(let m=0; m < this.CITIES_TEXT.length; m++){                    
+                    this.CITIES_TEXT[m].rotation.x = this.CITIES_TEXT_ROT[m][0];
+                    this.CITIES_TEXT[m].rotation.y = this.CITIES_TEXT_ROT[m][1];
+                    // this.COUNTRIES_TEXT[m].rotation.z = this.COUNTRIES_TEXT_ROT[m][2];
+                    this.CITIES_TEXT[m].rotation.z = this.camera.rotation.z;                   
                 }
             }   
         },
 
+        drawPoint: function(coordinates, h){
+            // POINT ;
+            let mesh = new THREE.Mesh(this.GEO_POINT, this.MAT_BASIC_RED);
+            mesh.position.x = -coordinates[1];
+            mesh.position.z = -coordinates[0];
+            mesh.position.y = h;
+            this.scene.add(mesh);
+        },
+
+        drawName: function(coordinates, h, name){
+
+            this.TTFLOADER.load(DBSANS, (json) => {
+                // First parse the font.
+                let dbsans = this.FONTLOADER.parse(json);
+                // Use parsed font as normal.
+                let textGeometry = new TextGeometry(name, { height: 0.0001, size: 0.0048, font: dbsans });
+                let textMaterial = new THREE.MeshBasicMaterial({ color: this.COL_FONT } );
+                let textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.position.x = -coordinates[1];
+                textMesh.position.z = -coordinates[0];
+                textMesh.position.y = h;
+                textMesh.rotateX(Math.PI/2);
+                textMesh.rotateZ(Math.PI);  
+                textMesh.rotateY(Math.PI);
+                this.scene.add(textMesh);
+
+                this.CITIES_TEXT_POS.push([textMesh.position.x, textMesh.position.y, textMesh.position.z]);
+                this.CITIES_TEXT_ROT.push([textMesh.rotation.x, textMesh.rotation.y, textMesh.rotation.z]);    
+                this.CITIES_TEXT.push(textMesh);
+
+
+            })
+        },
+    
+
 
         getCityData: function(){
+            fetch("./german_top_603_cities.json").then((response) => {
+                response.json().then((data) => {
+                    console.log(data);
+                    for(let i=0; i < data.length; i++){
+                        if (this.CITIES.includes(data[i]["city"])) {
+                            console.log(data[i]["city"]);
+                            let coordinates = this.getGPSRelativePosition([data[i]["lng"], data[i]["lat"]], this.center);
+                            console.log(coordinates);
+                            this.drawPoint(coordinates, this.OBJ_HEIGHT_DEFAULT);
+                            this.drawName([coordinates[0]-0.002, coordinates[1]-0.005], this.OBJ_HEIGHT_DEFAULT+0.005, data[i]["city"]);
 
+                        }
+                    }
+                })
+            })
         },
 
         getMapData: function () {
@@ -276,7 +365,7 @@ export default {
                                     let dbsans = fontloader.parse(json);
                                     // Use parsed font as normal.
                                     let textGeometry = new TextGeometry(this.COUNTRIES[c], { height: 0.0001, size: 0.0048, font: dbsans });
-                                    let textMaterial = new THREE.MeshBasicMaterial({ color: this.COL_FONT } );
+                                    let textMaterial = this.MAT_NAME_OPAQUE;
                                     let textMesh = new THREE.Mesh(textGeometry, textMaterial);
                                     textMesh.position.x = -coordinates[1];
                                     textMesh.position.z = -coordinates[0];
@@ -389,8 +478,10 @@ export default {
 
         this.init();
         this.animate();
+
         this.setCountryNames();
         this.getMapData();
+        this.getCityData();
         
 
     }
