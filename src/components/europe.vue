@@ -47,7 +47,7 @@ export default {
             COUNTRIES_TEXT_ROT: [],
             COUNTRIES_TEXT_POS: [],
 
-            ADAPTIVE_TEXT_HEIGHT_MIN: 0.02,
+            ADAPTIVE_TEXT_HEIGHT_MIN: 0.025,
             ADAPTIVE_TEXT_HEIGHT_MAX: 0.05,
             COUNTRIES_POINT:[],
 
