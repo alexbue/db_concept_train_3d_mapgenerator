@@ -56,6 +56,8 @@ export default {
             CITIES_TEXT_POS: [],            
 
             GEO_POINT: new THREE.BoxGeometry(0.005, 0.005, 0.005),
+            GEO_SPHERE: new THREE.SphereGeometry(0.005,16,8),
+            GEO_STATION: new THREE.BoxGeometry(0.01, 0.01, 0.02),
 
             GEO_POINTS: [],
 
@@ -65,6 +67,7 @@ export default {
 
             MAT_BASIC_BLACK: new THREE.MeshBasicMaterial({color: 0x000000}),
             MAT_BASIC_RED: new THREE.MeshBasicMaterial({color: 0xff0000}),
+            MAT_BASIC_WHITE: new THREE.MeshBasicMaterial({color: 0xFAF8F6}),
 
             MAT_NAME_OPAQUE: new THREE.MeshBasicMaterial({color: 0x484848, transparent: true, opacity: 1}),
 
@@ -128,6 +131,15 @@ export default {
                 "Leipzig",
                 "Stuttgart",
                 "Augsburg",
+            ],
+
+            TRAINLINES: [
+                ["München", "Frankfurt", "Leipzig"],
+                ["München", "Leipzig"],
+                ["München", "Stuttgart", "Frankfurt", "Leipzig"],
+                ["München", "Augsburg", "Stuttgart", "Frankfurt", "Leipzig"],
+                ["München", "Augsburg", "Nürnberg", "Frankfurt"],
+                ["München", "Augsburg", "Stuttgart", "Frankfurt"],
             ],
 
         }
@@ -216,7 +228,7 @@ export default {
             // OPACITY, HEIGHT
 
             for(let m=0; m < this.COUNTRIES_TEXT.length; m++){
-                this.COUNTRIES_TEXT[m].material.opacity = this.clamp(this.camera.position.y, 0, 3.5)/3.85;
+                this.COUNTRIES_TEXT[m].material.opacity = this.clamp(this.camera.position.y, 0, 1.5)/1.5;
             }
 
             for(let m=0; m < this.CITIES_TEXT.length; m++){
@@ -279,7 +291,55 @@ export default {
             this.scene.add(mesh);
         },
 
-        drawName: function(coordinates, h, name){
+        drawStation: function(coordinates, h){
+            // POINT ;
+            let mesh = new THREE.Mesh(this.GEO_SPHERE, this.MAT_BASIC_WHITE);
+            mesh.position.x = -coordinates[1];
+            mesh.position.z = -coordinates[0];
+            mesh.position.y = h;
+            this.scene.add(mesh);
+            this.drawEdge(this.GEO_SPHERE,mesh.position.x, mesh.position.y, mesh.position.z);
+        },
+
+        drawEdge: function(geometry, x,y,z){
+            let edges = new THREE.EdgesGeometry( geometry );
+            let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: this.COL_EDGES } ) );
+            line.position.x = x;
+            line.position.z = z;
+            line.position.y = y;
+            this.scene.add( line );
+        },
+
+        drawTrainLines: function(){
+
+            fetch("./german_top_603_cities.json").then((response) => {
+                response.json().then((data) => {
+                    console.log(data);
+
+                    let points = [];
+
+                    for(let i=0; i < this.TRAINLINES.length; i++){
+
+                        for(let j=0; j < this.TRAINLINES[i].length; j++){
+
+                            for(let t=0; t < data.length; t++){
+
+                                if (data[t]["city"] == this.TRAINLINES[i][j]) {                        
+                                    let coordinates = this.getGPSRelativePosition([data[t]["lng"], data[t]["lat"]], this.center);
+                                    points.push( new THREE.Vector3(-coordinates[1], this.OBJ_HEIGHT_DEFAULT, -coordinates[0] ) );
+                                }
+                            }
+                        }
+                    }
+
+                    let geometry = new THREE.BufferGeometry().setFromPoints( points );
+                    let line = new THREE.Line( geometry, this.MAT_BASIC_RED );
+                    this.scene.add( line );
+                })
+            })
+        },
+
+        drawName: function(coordinates, h, name, ){
 
             this.TTFLOADER.load(DBSANS, (json) => {
                 // First parse the font.
@@ -315,8 +375,10 @@ export default {
                             console.log(data[i]["city"]);
                             let coordinates = this.getGPSRelativePosition([data[i]["lng"], data[i]["lat"]], this.center);
                             console.log(coordinates);
-                            this.drawPoint(coordinates, this.OBJ_HEIGHT_DEFAULT);
+                            // this.drawPoint(coordinates, this.OBJ_HEIGHT_DEFAULT);
+                            this.drawStation(coordinates, this.OBJ_HEIGHT_DEFAULT);
                             this.drawName([coordinates[0]-0.002, coordinates[1]-0.005], this.OBJ_HEIGHT_DEFAULT+0.005, data[i]["city"]);
+                            this.drawTrainLines();
 
                         }
                     }
@@ -327,7 +389,7 @@ export default {
         getMapData: function () {
             fetch("./europe_borders_7MB_6p.geojson").then((response) => {
                 response.json().then((data) => {
-
+                    
                     let f = data.features;
                     let ckey = 0;
                     // console.log(f);
