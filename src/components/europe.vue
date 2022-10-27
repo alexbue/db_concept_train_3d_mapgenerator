@@ -4,6 +4,7 @@
 </template>
 
 <script>
+
 import * as THREE from 'three';
 import { MapControls } from "three/examples/jsm/controls/OrbitControls";
 import { TTFLoader } from "three/examples/jsm/loaders/TTFLoader";
@@ -37,8 +38,8 @@ export default {
 
             k: 0,
 
-            FONTLOADER: new FontLoader(),
-            TTFLOADER: new TTFLoader(),
+            FONTLOADER: null,
+            TTFLOADER: null,
 
             OBJ_HEIGHT_DEFAULT: 0.025,
 
@@ -56,14 +57,24 @@ export default {
             CITIES_TEXT_POS: [],            
 
             GEO_POINT: new THREE.BoxGeometry(0.005, 0.005, 0.005),
+            GEO_POINT_LINE: new THREE.SphereGeometry(0.002,8, 4),
             GEO_SPHERE: new THREE.SphereGeometry(0.005,16,8),
             GEO_STATION: new THREE.BoxGeometry(0.01, 0.01, 0.02),
 
             GEO_POINTS: [],
 
+            // FLAGS: 
+            DATA_LOADED: false, 
+
+            // MAPGENERATOR CONTROLS: 
+            CON_INOUT_DISTANCE: 0.03,
+
             // THREEJS-OBJECT REFERENCES
 
-            GRIDHELPER: null,             
+            GRIDHELPER: null,  
+            
+            TRAINLINES_ORIGINAL: [],
+            TRAINLINES_MODIFIED: [],
 
             MAT_BASIC_BLACK: new THREE.MeshBasicMaterial({color: 0x000000}),
             MAT_BASIC_RED: new THREE.MeshBasicMaterial({color: 0xff0000}),
@@ -121,7 +132,6 @@ export default {
                 "Nürnberg",
                 "Leipzig",
                 "Stuttgart",
-                "Augsburg",
             ],
 
             CITIES: [
@@ -130,27 +140,32 @@ export default {
                 "Nürnberg",
                 "Leipzig",
                 "Stuttgart",
-                "Augsburg",
             ],
 
             TRAINLINES: [
-                ["München", "Frankfurt", "Leipzig"],
+                ["München", "Stuttgart", "Leipzig"],
                 ["München", "Leipzig"],
                 ["München", "Stuttgart", "Frankfurt", "Leipzig"],
-                ["München", "Augsburg", "Stuttgart", "Frankfurt", "Leipzig"],
-                ["München", "Augsburg", "Nürnberg", "Frankfurt"],
-                ["München", "Augsburg", "Stuttgart", "Frankfurt"],
+                ["München", "Stuttgart", "Frankfurt", "Leipzig"],
+                ["München", "Nürnberg", "Frankfurt"],
+                ["München", "Stuttgart", "Frankfurt"],
             ],
 
         }
 
     },
 
-    methods: {
+    mounted() {
 
-        clamp: function(num, min, max){
-           return Math.min(Math.max(num, min), max);
-        },
+    this.init();
+    this.animate();   
+    this.getMapData();
+    this.getDataTrainstations();
+    this.addCountryNames();
+
+    },
+
+    methods: {        
 
         init: function () {
 
@@ -163,6 +178,9 @@ export default {
                 that.camera.updateProjectionMatrix();
                 that.renderer.setSize(window.innerWidth, window.innerHeight);
             }
+
+            this.FONTLOADER = new FontLoader();
+            this.TTFLOADER = new TTFLoader();
 
             let container = document.getElementById('container');
 
@@ -208,16 +226,13 @@ export default {
             this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.25;
             this.controls.screenSpacePanning = false;
-            this.controls.maxDistance = 80;    
-            
+            this.controls.maxDistance = 80;                
             
         },
 
         animate: function () {
             
             requestAnimationFrame(this.animate);
-            // this.mesh.rotation.x += 0.01;
-            // this.mesh.rotation.y += 0.02;
             this.renderer.render(this.scene, this.camera);
             this.controls.update();
             this.animateToCamera();
@@ -282,7 +297,8 @@ export default {
             }   
         },
 
-        drawPoint: function(coordinates, h){
+
+        addMesh_Point: function(coordinates, h){
             // POINT ;
             let mesh = new THREE.Mesh(this.GEO_POINT, this.MAT_BASIC_RED);
             mesh.position.x = -coordinates[1];
@@ -291,17 +307,17 @@ export default {
             this.scene.add(mesh);
         },
 
-        drawStation: function(coordinates, h){
+        addMesh_Station: function(coordinates, h){
             // POINT ;
             let mesh = new THREE.Mesh(this.GEO_SPHERE, this.MAT_BASIC_WHITE);
             mesh.position.x = -coordinates[1];
             mesh.position.z = -coordinates[0];
             mesh.position.y = h;
             this.scene.add(mesh);
-            this.drawEdge(this.GEO_SPHERE,mesh.position.x, mesh.position.y, mesh.position.z);
+            this.addMesh_Edges(this.GEO_SPHERE,mesh.position.x, mesh.position.y, mesh.position.z);
         },
 
-        drawEdge: function(geometry, x,y,z){
+        addMesh_Edges: function(geometry, x,y,z){
             let edges = new THREE.EdgesGeometry( geometry );
             let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: this.COL_EDGES } ) );
             line.position.x = x;
@@ -310,81 +326,159 @@ export default {
             this.scene.add( line );
         },
 
-        drawTrainLines: function(){
+        addMesh_StationNames: function(coordinates, h, name, ){
+        this.TTFLOADER.load(DBSANS, (json) => {
+            // First parse the font.
+            let dbsans = this.FONTLOADER.parse(json);
+            // Use parsed font as normal.
+            let textGeometry = new TextGeometry(name, { height: 0.0001, size: 0.0048, font: dbsans });
+            let textMaterial = new THREE.MeshBasicMaterial({ color: this.COL_FONT } );
+            let textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.x = -coordinates[1];
+            textMesh.position.z = -coordinates[0];
+            textMesh.position.y = h;
+            textMesh.rotateX(Math.PI/2);
+            textMesh.rotateZ(Math.PI);  
+            textMesh.rotateY(Math.PI);
+            this.scene.add(textMesh);
+            this.CITIES_TEXT_POS.push([textMesh.position.x, textMesh.position.y, textMesh.position.z]);
+            this.CITIES_TEXT_ROT.push([textMesh.rotation.x, textMesh.rotation.y, textMesh.rotation.z]);    
+            this.CITIES_TEXT.push(textMesh);
+            })
+        },  
 
-            fetch("./german_top_603_cities.json").then((response) => {
-                response.json().then((data) => {
-                    console.log(data);
+        getDataTrainstations: function(){
+            fetch("./german_top_603_cities.json")
+            .then((response)  => { 
+                response.json()
+                .then((data)  => {  
+                    this.addTrainStations(data);
+                    this.getTRAINLINES(data); 
+                })
+                // .catch(() =>{ /* NO ERROR MSGS */ })
+            })
+        },
 
-                    let points = [];
+        addTrainStations: function(data){
+            for(let i=0; i < data.length; i++){
+                        if (this.CITIES.includes(data[i]["city"])) {
+                            // console.log(data[i]["city"]);
+                            let coordinates = this.getGPSRelativePosition([data[i]["lng"], data[i]["lat"]], this.center);
+                            this.addMesh_Station(coordinates, this.OBJ_HEIGHT_DEFAULT);
+                            this.addMesh_StationNames([coordinates[0]-0.002, coordinates[1]-0.005], this.OBJ_HEIGHT_DEFAULT+0.005, data[i]["city"]);
+                        }
+                    }
+        },
 
+        getTRAINLINES: function(data){
+            let trainline_paths = [];
                     for(let i=0; i < this.TRAINLINES.length; i++){
-
+                        let path = []
                         for(let j=0; j < this.TRAINLINES[i].length; j++){
-
                             for(let t=0; t < data.length; t++){
-
-                                if (data[t]["city"] == this.TRAINLINES[i][j]) {                        
+                                if (data[t]["city"] == this.TRAINLINES[i][j]) {   
                                     let coordinates = this.getGPSRelativePosition([data[t]["lng"], data[t]["lat"]], this.center);
-                                    points.push( new THREE.Vector3(-coordinates[1], this.OBJ_HEIGHT_DEFAULT, -coordinates[0] ) );
+                                    path.push( new THREE.Vector3(-coordinates[1], this.OBJ_HEIGHT_DEFAULT, -coordinates[0] ) );
                                 }
                             }
                         }
+                        trainline_paths.push(path);
                     }
-
-                    let geometry = new THREE.BufferGeometry().setFromPoints( points );
-                    let line = new THREE.Line( geometry, this.MAT_BASIC_RED );
-                    this.scene.add( line );
-                })
-            })
+                    this.TRAINLINES_ORIGINAL = trainline_paths;   
+                    console.log(this.TRAINLINES_ORIGINAL);
+                this.modTRAINLINES(trainline_paths); 
         },
 
-        drawName: function(coordinates, h, name, ){
+        clamp: function(num, min, max){ return Math.min(Math.max(num, min), max); },
+        getAngle: function(a, b){ return -Math.atan2((b.y - a.y),(b.x - a.x)) * 180 / Math.PI; },
 
-            this.TTFLOADER.load(DBSANS, (json) => {
-                // First parse the font.
-                let dbsans = this.FONTLOADER.parse(json);
-                // Use parsed font as normal.
-                let textGeometry = new TextGeometry(name, { height: 0.0001, size: 0.0048, font: dbsans });
-                let textMaterial = new THREE.MeshBasicMaterial({ color: this.COL_FONT } );
-                let textMesh = new THREE.Mesh(textGeometry, textMaterial);
-                textMesh.position.x = -coordinates[1];
-                textMesh.position.z = -coordinates[0];
-                textMesh.position.y = h;
-                textMesh.rotateX(Math.PI/2);
-                textMesh.rotateZ(Math.PI);  
-                textMesh.rotateY(Math.PI);
-                this.scene.add(textMesh);
-
-                this.CITIES_TEXT_POS.push([textMesh.position.x, textMesh.position.y, textMesh.position.z]);
-                this.CITIES_TEXT_ROT.push([textMesh.rotation.x, textMesh.rotation.y, textMesh.rotation.z]);    
-                this.CITIES_TEXT.push(textMesh);
-
-
-            })
+        rotatePointAround: function(p1, p2){
+            // 2.1 determine point's quadrant around the station, where the point originates
+            // 2.2 Rotate point on station as axis
+            // 0-90°:    = in 1st quadrant -> set new out angle: 45°
+            // 90-180°:  = in 2end quadrant -> set new out angle: 135°
+            // 180-270°: = in 3rd quadrant -> set new out angle: 225°
+            // 270-360°: = in 4th quadrant -> set new out angle: 315°
+            let axis = new THREE.Vector2(p1.x, p1.z);
+            let point = new THREE.Vector2(p2.x, p2.z);
+            let current = this.getAngle(axis, point);
+            let target = 45 + ( Math.floor ( current / 90 ) * 90 ); // unreadable, but elegant conditional switch-statement ;)
+            let r = point.rotateAround(axis, -THREE.MathUtils.degToRad(target - current));         
+            return new THREE.Vector3(r.x, p1.y, r.y);                              
         },
-    
 
+        setDistanceStationInOut: function(p1, p2){            
+            let station = new THREE.Vector2(p1.x, p1.z);
+            let point = new THREE.Vector2(p2.x, p2.z);
+            point = point.sub(station).normalize().multiplyScalar(this.CON_INOUT_DISTANCE).add(station);
+            return new THREE.Vector3(point.x, p1.y, point.y); 
+        }, 
 
-        getCityData: function(){
-            fetch("./german_top_603_cities.json").then((response) => {
-                response.json().then((data) => {
-                    console.log(data);
-                    for(let i=0; i < data.length; i++){
-                        if (this.CITIES.includes(data[i]["city"])) {
-                            console.log(data[i]["city"]);
-                            let coordinates = this.getGPSRelativePosition([data[i]["lng"], data[i]["lat"]], this.center);
-                            console.log(coordinates);
-                            // this.drawPoint(coordinates, this.OBJ_HEIGHT_DEFAULT);
-                            this.drawStation(coordinates, this.OBJ_HEIGHT_DEFAULT);
-                            this.drawName([coordinates[0]-0.002, coordinates[1]-0.005], this.OBJ_HEIGHT_DEFAULT+0.005, data[i]["city"]);
-                            this.drawTrainLines();
+        emptyPointer: function(){},
 
+        modTRAINLINES: function(trainline_paths){
+            console.log("CALLED modTRAINLINES +++++++++++++++++");
+                    // console.log(trainline_paths.length);
+
+                    for (let p=0; p < trainline_paths.length; p++){                    
+
+                        let path = trainline_paths[p];
+                        let segments = [];
+                        // console.log(path.length-1);
+
+                        for (let seg = 0; seg < path.length-1; seg++){                           
+                            
+
+                            // STEP 1 - SUBDIVIDE PATH FROM STATION A -> B INTO 5 EQUALLY LONG CHUNKS
+                            segments.push(new THREE.LineCurve3(path[seg], path[seg+1]).getSpacedPoints(5));
+
+                            let station_out = segments[seg][0]
+                            let point_out = segments[seg][1]
+                            let station_in = segments[seg][segments[seg].length-1]
+                            let point_in = segments[seg][segments[seg].length-2]                            
+
+                            // STEP 2 RE-ARRANGE THE DIRECTION (angle) + POSITION (coordinates) OF EVERY FIRST OUTCOMING/INCOMING POINT FOR EVERY STATION BY ITS QUADRANT-ANGLE
+                            segments[seg][1] = this.rotatePointAround(station_out, point_out);
+                            segments[seg][segments[seg].length-2] = this.rotatePointAround(station_in, point_in);
+
+                            station_out = segments[seg][0]
+                            point_out = segments[seg][1]
+                            station_in = segments[seg][segments[seg].length-1]
+                            point_in = segments[seg][segments[seg].length-2]    
+                     
+                            // set distance of in/out points to station
+                            segments[seg][1] = this.setDistanceStationInOut(station_out, point_out);
+                            segments[seg][segments[seg].length-2] = this.setDistanceStationInOut(station_in, point_in);
+                           
+                            // DRAW TRAIN LINES
+                            let geometry = new THREE.BufferGeometry().setFromPoints(segments[seg]);
+                            let line = new THREE.Line( geometry, new THREE.LineBasicMaterial({color: this.COLORMAPS[p], linewidth: 3}));
+                            this.scene.add(line);  
+                            
+                            // DRAW CONNECTION POINTS FOR BETTER VISUALIZATION
+                            for (let s=1; s < segments[seg].length-1; s++){
+                                let mesh = new THREE.Mesh(this.GEO_POINT_LINE, new THREE.MeshBasicMaterial({color: this.COLORMAPS[p],}));
+                                mesh.position.x = segments[seg][s].x; 
+                                mesh.position.y = segments[seg][s].y;  
+                                mesh.position.z = segments[seg][s].z;                 
+                                this.scene.add(mesh);    
+                            }
+                            
+                            // let axesHelper = new THREE.AxesHelper( 1 );
+                            // axesHelper.position.x = segments[1].x;
+                            // axesHelper.position.y += this.OBJ_HEIGHT_DEFAULT;
+                            // axesHelper.position.z = segments[1].z;
+                            // this.scene.add( axesHelper );                       
+
+                           
+                            
                         }
+                        this.TRAINLINES_MODIFIED.push(segments);
                     }
-                })
-            })
+                    console.log(this.TRAINLINES_MODIFIED);      
+                    // this.getTRAINLINES = this.emptyPointer();  
         },
+        
 
         getMapData: function () {
             fetch("./europe_borders_7MB_6p.geojson").then((response) => {
@@ -410,7 +504,7 @@ export default {
             })
         },
 
-        setCountryNames: function(){
+        addCountryNames: function(){
 
             fetch("./countries_centroids_mod.geojson").then((response) => {
                 response.json().then((data) => {
@@ -424,11 +518,10 @@ export default {
                                 mesh.position.z = -coordinates[0];
                                 mesh.position.x = -coordinates[1];
                                 // this.scene.add(mesh); 
-                                let fontloader = new FontLoader();
-                                let ttfLoader = new TTFLoader();
-                                ttfLoader.load(DBSANS, (json) => {
+
+                                this.TTFLOADER.load(DBSANS, (json) => {
                                     // First parse the font.
-                                    let dbsans = fontloader.parse(json);
+                                    let dbsans = this.FONTLOADER.parse(json);
                                     // Use parsed font as normal.
                                     let textGeometry = new TextGeometry(this.COUNTRIES[c], { height: 0.0001, size: 0.0048, font: dbsans });
                                     let textMaterial = this.MAT_NAME_OPAQUE;
@@ -447,13 +540,9 @@ export default {
                                     this.COUNTRIES_TEXT.push(textMesh);
 
                                 });
-
                             }
                         }
                     }
-
-
-
                 })
             })
 
@@ -539,18 +628,6 @@ export default {
             return [-x, y]
         }
     },
-
-    mounted() {
-
-        this.init();
-        this.animate();
-
-        this.setCountryNames();
-        this.getMapData();
-        this.getCityData();
-        
-
-    }
 }
 </script>
 
