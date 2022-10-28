@@ -26,13 +26,13 @@ export default {
         return {
 
             STATS: new Stats(),
-            GUI: new dat.GUI({width:400}),
+            GUI: new dat.GUI({ width: 400 }),
 
             // GUI CONTROLS:
             GUI_CONTROLS: new function () {
+                this.GLOBAL_MIX = 1;
                 this.IN_OUT_DISTANCE = 0.03;
                 this.IN_OUT_ANGLE = 45;
-                this.PARAM2 = 0.5;
                 this.PARAM3 = 0.5;
             },
 
@@ -87,13 +87,15 @@ export default {
             DATA_LOADED: false,
 
 
+            // TRAINLINE DATA
+            
+            DATA_ORIGINAL: [],
+            DATA_MOD: [],             
+            DATA_VIEW: [],             
 
             // THREEJS-OBJECT REFERENCES
 
             GRIDHELPER: null,
-
-            TRAINLINES_ORIGINAL: [],
-            TRAINLINES_MODIFIED: [],
 
             COL_OCEAN: new THREE.Color(0xabd8ea),
             COL_TARGET: new THREE.Color(0xF8F8FF), // white
@@ -134,14 +136,14 @@ export default {
 
             MAT_BASIC_BLACK: new THREE.MeshBasicMaterial({ color: 0x000000 }),
             MAT_BASIC_RED: new THREE.MeshBasicMaterial({ color: 0xff0000 }),
-            MAT_BASIC_WHITE: new THREE.MeshBasicMaterial({ color: 0xFAF8F6 }),            
+            MAT_BASIC_WHITE: new THREE.MeshBasicMaterial({ color: 0xFAF8F6 }),
             MAT_TEXT: new THREE.MeshBasicMaterial({ color: 0x484848 }),
 
-            MAT_LINE_EDGES: new THREE.LineBasicMaterial({color: new THREE.Color(0x97B49C)}),
+            MAT_LINE_EDGES: new THREE.LineBasicMaterial({ color: new THREE.Color(0x97B49C) }),
 
             MAT_NAME_OPAQUE: new THREE.MeshBasicMaterial({ color: 0x484848, transparent: true, opacity: 1 }),
 
-     
+
 
             COUNTRIES: [
                 "Germany",
@@ -218,8 +220,9 @@ export default {
 
             document.body.appendChild(this.STATS.dom);
             let folder = this.GUI.addFolder("Parameter");
-            folder.add(this.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.02).onChange((value) => {console.log(value); this.updateRender()});
-            folder.add(this.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange((value) => {console.log(value); this.updateRender()});
+            folder.add(this.GUI_CONTROLS, 'GLOBAL_MIX', 0, 1).onChange((value) => { console.log(value); this.updateRender() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.02).onChange((value) => { console.log(value); this.updateRender() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange((value) => { console.log(value); this.updateRender() });
             folder.open();
 
             this.FONTLOADER = new FontLoader();
@@ -280,7 +283,7 @@ export default {
             this.controls.update();
             this.animateToCamera();
             this.STATS.update();
-         },
+        },
 
         animateToCamera: function () {
 
@@ -428,38 +431,56 @@ export default {
                 }
                 trainline_paths.push(path);
             }
-            this.TRAINLINES_ORIGINAL = trainline_paths;
+            this.DATA_ORIGINAL = trainline_paths;
             this.modTRAINLINES();
         },
+
 
         clamp: function (num, min, max) { return Math.min(Math.max(num, min), max); },
         getAngle: function (a, b) { return -Math.atan2((b.y - a.y), (b.x - a.x)) * 180 / Math.PI; },
 
-        updateSections: function(fun) {
-            for (let line = 0; line < this.TRAINLINES_MODIFIED.length; line++) {
-                for (let section = 0; section < this.TRAINLINES_MODIFIED[line].length; section++) {
-                    fun(this.TRAINLINES_MODIFIED[line][section], section, line);
+        // #
+        // DATA CONTROL FUNCTIONS
+        // #
+
+        updateData: function (fun) {
+            for (let line = 0; line < this.DATA_MOD.length; line++) {
+                for (let section = 0; section < this.DATA_MOD[line].length; section++) {
+                    fun(this.DATA_MOD[line][section], section, line);
                 }
             }
+            this.update_global_mix();
         },
 
-        update_in_out_station: function(data, section, line){
+        update_global_mix: function(){
+            console.log("GLOBAL MIX", this.GUI_CONTROLS.GLOBAL_MIX);
+            console.log("ORIGINAL", this.DATA_ORIGINAL);
+            console.log("MOD", this.DATA_MOD);
 
+            // ###############
+            // ###############
+            // ###############
+
+            this.DATA_VIEW = this.DATA_ORIGINAL;
+
+            // ###############
+            // ###############
+            // ###############
+        },
+
+        update_in_out_station: function (data, section, line) {
             let stati_in = data[data.length - 1];
             let point_in = data[data.length - 2];
             let stati_out = data[0];
             let point_out = data[1];
-
-            this.TRAINLINES_MODIFIED[line][section][1] = this.update_distance(stati_out, point_out);               
-            this.TRAINLINES_MODIFIED[line][section][data.length - 2] = this.update_distance(stati_in, point_in); 
-
-            stati_in = this.TRAINLINES_MODIFIED[line][section][this.TRAINLINES_MODIFIED[line][section].length - 1];
-            point_in = this.TRAINLINES_MODIFIED[line][section][this.TRAINLINES_MODIFIED[line][section].length - 2];
-            stati_out = this.TRAINLINES_MODIFIED[line][section][0];
-            point_out = this.TRAINLINES_MODIFIED[line][section][1];
-
-            this.TRAINLINES_MODIFIED[line][section][1] = this.rotatePointAround(stati_out, point_out); 
-            this.TRAINLINES_MODIFIED[line][section][data.length - 2] = this.rotatePointAround(stati_in, point_in);  
+            this.DATA_MOD[line][section][1] = this.update_distance(stati_out, point_out);
+            this.DATA_MOD[line][section][data.length - 2] = this.update_distance(stati_in, point_in);
+            stati_in = this.DATA_MOD[line][section][this.DATA_MOD[line][section].length - 1];
+            point_in = this.DATA_MOD[line][section][this.DATA_MOD[line][section].length - 2];
+            stati_out = this.DATA_MOD[line][section][0];
+            point_out = this.DATA_MOD[line][section][1];
+            this.DATA_MOD[line][section][1] = this.rotatePointAround(stati_out, point_out);
+            this.DATA_MOD[line][section][data.length - 2] = this.rotatePointAround(stati_in, point_in);
         },
 
         update_distance: function (p1, p2) {
@@ -478,64 +499,89 @@ export default {
             return new THREE.Vector3(r.x, p1.y, r.y);
         },
 
-        subdivide: function(){
-            for (let t = 0; t < this.TRAINLINES_ORIGINAL.length; t++) {
-                let updates = [];                                
-                for (let section = 0; section < this.TRAINLINES_ORIGINAL[t].length-1; section++) {
-                   updates.push(new THREE.LineCurve3(this.TRAINLINES_ORIGINAL[t][section],  this.TRAINLINES_ORIGINAL[t][section + 1]).getSpacedPoints(5));                      
+        subdivide: function () {
+
+            // local duplicates to avoid overwrite referenced data
+
+            let data_mod = [];
+            let original = [];
+
+            for (let t = 0; t < this.DATA_ORIGINAL.length; t++) {
+                let updates = [];
+                let updates2= [];
+                for (let section = 0; section < this.DATA_ORIGINAL[t].length - 1; section++) {
+                    updates.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(5));
+                    updates2.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(5));
                 }
-                this.TRAINLINES_MODIFIED.push(updates);
+                data_mod.push(updates);
+                original.push(updates2);
             }
+
+            this.DATA_MOD = data_mod;
+            this.DATA_ORIGINAL = original;
         },
 
-        clear_3d_view: function(){
+        clear_3d_scene: function () {
             // remove + dispose
-            for (let m = 0; m < this.MODEL_SECTIONS.length; m++) {                 
+            for (let m = 0; m < this.MODEL_SECTIONS.length; m++) {
                 this.MODEL_SECTIONS[m].geometry.dispose();
                 this.MODEL_SECTIONS[m].material.dispose();
-                this.scene.remove( this.MODEL_SECTIONS[m] );            }
-
+                this.scene.remove(this.MODEL_SECTIONS[m]);
+            }
             for (let m = 0; m < this.MODEL_SECTIONS_CONNECTIONS.length; m++) {
-                for(let n = 0; n < this.MODEL_SECTIONS_CONNECTIONS[m].length; n++) {                    
+                for (let n = 0; n < this.MODEL_SECTIONS_CONNECTIONS[m].length; n++) {
                     this.MODEL_SECTIONS_CONNECTIONS[m][n].geometry.dispose();
                     this.MODEL_SECTIONS_CONNECTIONS[m][n].material.dispose();
-                    this.scene.remove( this.MODEL_SECTIONS_CONNECTIONS[m][n] );
-                }                    
-            }            
+                    this.scene.remove(this.MODEL_SECTIONS_CONNECTIONS[m][n]);
+                }
+            }
             this.renderer.renderLists.dispose();
         },
 
-        update_3d_view: function(){  
+        update_3d_scene: function () {
 
             // trainline sections
-            for (let m = 0; m < this.MODEL_SECTIONS.length; m++) {  
-                this.scene.add(this.MODEL_SECTIONS[m]);    
+            for (let m = 0; m < this.MODEL_SECTIONS.length; m++) {
+                this.scene.add(this.MODEL_SECTIONS[m]);
             }
 
             // section connections
             for (let m = 0; m < this.MODEL_SECTIONS_CONNECTIONS.length; m++) {
-                for(let n = 0; n < this.MODEL_SECTIONS_CONNECTIONS[m].length; n++) {
+                for (let n = 0; n < this.MODEL_SECTIONS_CONNECTIONS[m].length; n++) {
                     this.scene.add(this.MODEL_SECTIONS_CONNECTIONS[m][n]);
-                }                    
-            }           
+                }
+            }
 
         },
 
-        update_3d_meshes: function(){
+        update_3d_objects: function () {
+
+            // let DATA = this.DATA_MOD;
+            
+            // ###############
+            // ###############
+            // ###############
+
+            let DATA = this.DATA_VIEW;
+            
+            // ###############
+            // ###############
+            // ###############
+            
 
             let models_connections = [];
-            let models_sections = [];
+            let models_sections = [];            
 
-            for (let t = 0; t < this.TRAINLINES_MODIFIED.length; t++) {
-                for (let section = 0; section < this.TRAINLINES_MODIFIED[t].length; section++) {
+            for (let t = 0; t < DATA.length; t++) {
+                for (let section = 0; section < DATA[t].length; section++) {
                     //  create train line sections
-                    models_sections.push(this.createLine(this.TRAINLINES_MODIFIED[t][section], t));
+                    models_sections.push(this.createLine(DATA[t][section], t));
                     let connections = []
                     // create section points
-                    for (let s = 1; s < this.TRAINLINES_MODIFIED[t][section].length - 1; s++) {    
-                        connections.push(this.createPoint(this.TRAINLINES_MODIFIED[t][section][s], t));
+                    for (let s = 1; s < DATA[t][section].length - 1; s++) {
+                        connections.push(this.createPoint(DATA[t][section][s], t));
                     }
-                    models_connections.push(connections);                  
+                    models_connections.push(connections);
                 }
             }
 
@@ -543,7 +589,7 @@ export default {
             this.MODEL_SECTIONS_CONNECTIONS = models_connections;
         },
 
-        createPoint: function(pos_vec3, color_index){
+        createPoint: function (pos_vec3, color_index) {
             let mesh = new THREE.Mesh(this.GEO_POINT_LINE, this.MAT_COLOR_MAPS[color_index]);
             mesh.position.x = pos_vec3.x;
             mesh.position.y = pos_vec3.y;
@@ -551,39 +597,32 @@ export default {
             return mesh;
         },
 
-        createLine: function(pos_vec3_array, color_index){
+        createLine: function (pos_vec3_array, color_index) {
             let geometry = new THREE.BufferGeometry().setFromPoints(pos_vec3_array);
             let line = new THREE.Line(geometry, this.MAT_COLOR_MAPS[color_index]);
             return line;
         },
 
-        updateRender: function(){
-            this.clear_3d_view();
-            this.updateSections(this.update_in_out_station);
-            this.update_3d_meshes();
-            this.update_3d_view(); 
+        updateRender: function () {
+            // clear scene
+            this.clear_3d_scene();
+            // update in/out distances + rotation
+            this.updateData(this.update_in_out_station);
+            // create geometries
+            this.update_3d_objects();
+            // draw 3d models
+            this.update_3d_scene();
         },
 
         emptyPointer: function () { },
 
         modTRAINLINES: function () {
 
-            console.log("CALLED modTRAINLINES +++++++++++++++++");
-
-            // DATA MANIPULATION
 
             // subdivide
             this.subdivide();
-
-            // update in/out distances + rotation
-            this.updateSections(this.update_in_out_station);
- 
-            // create meshes
-            this.update_3d_meshes();
-            
-            // draw 3d models
-            this.update_3d_view();    
-
+            // initial render
+            this.updateRender();
             // this.getTRAINLINES = this.emptyPointer();  
         },
 
@@ -747,8 +786,13 @@ export default {
     text-align: center;
     color: #2c3e50;
     background-color: red;
-};
-#gui{
+}
+
+;
+
+#gui {
     width: 800px;
-};
+}
+
+;
 </style>
