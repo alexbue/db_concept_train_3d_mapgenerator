@@ -33,6 +33,7 @@ export default {
             // GUI CONTROLS:
             GUI_CONTROLS: new function () {
                 this.GLOBAL_MIX = 1;
+                this.GLOBAL_DEBUG_MODE = true;
                 this.IN_OUT_DISTANCE = 0.03;
                 this.IN_OUT_ANGLE = 45;
                 this.IN_OUT_ALIGNMENT = 0.002;
@@ -247,7 +248,8 @@ export default {
             folder.open();
             let folder2 = this.GUI.addFolder("globals");
             folder2.add(this.GUI_CONTROLS, 'GLOBAL_MIX', 0, 1).name('GLOBAL MIX').onChange(() => { this.updateRender() });
-            folder2.add(this.GUI_RESET, "GUI_RESET").name("RESET MODIFIER").onChange(() => { this.reset_gui(); this.updateRender() });
+            folder2.add(this.GUI_CONTROLS, "GLOBAL_DEBUG_MODE").name("DEBUG MODE").onChange(() => {this.updateRender(); console.log(this.GUI_CONTROLS.GLOBAL_DEBUG_MODE);});
+            folder2.add(this.GUI_RESET, "GUI_RESET").name("RESET MODIFIER").onChange(() => { this.reset_gui(); this.updateRender() });            
             folder2.open();
             let folder3 = this.GUI.addFolder("camera");
             folder3.add(this.GUI_RESET_CAMERA, "GUI_RESET").name("RESET CAMERA").onChange(() => { this.reset_camera(); this.updateRender() });
@@ -263,11 +265,14 @@ export default {
 
             // initial bird view
             this.camera = new THREE.OrthographicCamera(window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000);
-            this.camera.zoom = 1800;
-            // this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 1, 100);
-            this.camera.position.set(0, 4, 0); // XYZ
-            this.camera.lookAt(0, 0, 0);
             this.camera.rotation.y = Math.PI / 2;
+            this.camera.position.set(0, 4, 0); // XYZ
+            this.camera.zoom = 1800;
+            this.camera.lookAt(0, 0, 0);
+            
+            // this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 1, 100);
+
+            
 
 
             this.scene.background = this.COL_OCEAN;
@@ -307,9 +312,10 @@ export default {
         animate: function () {
 
             requestAnimationFrame(this.animate);
-            this.renderer.render(this.scene, this.camera);
-            this.controls.update();
+            this.renderer.render(this.scene, this.camera);            
             this.animateToCamera();
+
+            this.controls.update();
             this.FPS.update();
             this.RAM.update();
             this.MS.update();
@@ -480,12 +486,24 @@ export default {
             this.GUI_CONTROLS.IN_OUT_ANGLE = 45;
             this.GUI_CONTROLS.IN_OUT_ALIGNMENT = 0.002;
             this.GUI_CONTROLS.IN_OUT_ALIGN_ANGLE = 30;
+            
+            // refresh GUI values manually
+            for (var i = 0; i < Object.keys(this.GUI.__folders).length; i++) {
+                var key = Object.keys(this.GUI.__folders)[i];
+                for (var j = 0; j < this.GUI.__folders[key].__controllers.length; j++ )
+                {
+                    this.GUI.__folders[key].__controllers[j].updateDisplay();
+                }
+            }
+
+            this.controls.update();
         },
 
-        reset_camera: function(){
-             this.camera.zoom = 1800;
-            this.camera.position.set(0, 4, 0); // XYZ
-            this.camera.lookAt(0, 0, 0);
+        reset_camera: function(){            
+            this.camera.position.set(0, 4, 0); // XYZ            
+            //#endregionthis.camera.lookAt(0, 0, 0);
+            this.camera.rotation.y = Math.PI / 2;
+            this.camera.zoom = 1800;
         },
     
         // #
@@ -642,13 +660,16 @@ export default {
                 this.scene.add(this.MODEL_SECTIONS[m]);
             }
 
-            // section connections
+            if (this.GUI_CONTROLS.GLOBAL_DEBUG_MODE){
+            // section points
             for (let m = 0; m < this.MODEL_SECTIONS_CONNECTIONS.length; m++) {
                 for (let n = 0; n < this.MODEL_SECTIONS_CONNECTIONS[m].length; n++) {
                     this.scene.add(this.MODEL_SECTIONS_CONNECTIONS[m][n]);
                 }
             }
 
+            }
+     
         },
 
         update_3d_objects: function () {
