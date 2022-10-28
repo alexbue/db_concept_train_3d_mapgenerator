@@ -32,8 +32,14 @@ export default {
                 this.GLOBAL_MIX = 1;
                 this.IN_OUT_DISTANCE = 0.03;
                 this.IN_OUT_ANGLE = 45;
-                this.PARAM3 = 0.5;
+                this.IN_OUT_ALIGNMENT = 0.002;
+                this.IN_OUT_ALIGN_ANGLE = 30;
             },
+            GUI_RESET: new function(){
+                this.GUI_RESET = function(){
+
+                };
+            },         
 
             // 3D OBJECTS
             MODEL_SECTIONS: [],
@@ -213,12 +219,20 @@ export default {
                 that.renderer.setSize(window.innerWidth, window.innerHeight);
             }
 
+            // STATS
             document.body.appendChild(this.STATS.dom);
-            let folder = this.GUI.addFolder("Parameter");
-            folder.add(this.GUI_CONTROLS, 'GLOBAL_MIX', 0, 1).onChange((value) => { console.log(value); this.updateRender() });
-            folder.add(this.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.02).onChange((value) => { console.log(value); this.updateRender() });
-            folder.add(this.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange((value) => { console.log(value); this.updateRender() });
+
+            // GUI
+            let folder = this.GUI.addFolder("modifier");
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.02).onChange(() => { this.updateRender() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange(() => { this.updateRender() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_ALIGNMENT', 0.001, 0.01).onChange(() => { this.updateRender() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_ALIGN_ANGLE', 1, 89).onChange(() => { this.updateRender() });
             folder.open();
+            let folder2 = this.GUI.addFolder("globals");
+            folder2.add(this.GUI_CONTROLS, 'GLOBAL_MIX', 0, 1).name('GLOBAL MIX').onChange(() => { this.updateRender() });
+            folder2.add(this.GUI_RESET, "GUI_RESET").name("RESET").onChange(() => { this.reset_gui(); this.updateRender() });
+            folder2.open();
 
             this.FONTLOADER = new FontLoader();
             this.TTFLOADER = new TTFLoader();
@@ -427,16 +441,75 @@ export default {
                 trainline_paths.push(path);
             }
             this.DATA_ORIGINAL = trainline_paths;
-            this.modTRAINLINES();
+
+            // subdivide
+            this.subdivide();
+            // initial render
+            this.updateRender();
+
         },
 
 
         clamp: function (num, min, max) { return Math.min(Math.max(num, min), max); },
         getAngle: function (a, b) { return -Math.atan2((b.y - a.y), (b.x - a.x)) * 180 / Math.PI; },
-
+        reset_gui: function(){
+            this.GUI_CONTROLS.GLOBAL_MIX = 1; 
+            this.GUI_CONTROLS.IN_OUT_DISTANCE = 0.03;
+            this.GUI_CONTROLS.IN_OUT_ANGLE = 45;
+            this.GUI_CONTROLS.IN_OUT_ALIGNMENT = 0.002;
+            this.GUI_CONTROLS.IN_OUT_ALIGN_ANGLE = 30;
+        },
+    
         // #
         // DATA CONTROL FUNCTIONS
         // #
+
+        subdivide: function () {
+        // local duplicates to avoid overwrite original referenced data
+        let data_mod = [];
+        let original = [];
+        let view = [];
+        for (let t = 0; t < this.DATA_ORIGINAL.length; t++) {
+            let updates = [];
+            let updates2= [];
+            let updates3 = [];
+            for (let section = 0; section < this.DATA_ORIGINAL[t].length - 1; section++) {
+                updates.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(7));
+                updates2.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(7));
+                updates3.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(7));
+
+                updates[section][1] = updates[section][0]; 
+                updates2[section][1] = updates2[section][0]; 
+                updates2[section][1] = updates2[section][0]; 
+
+                updates[section][updates[section].length-2] = updates[section][updates[section].length-1]; 
+                updates2[section][updates2[section].length-2] = updates2[section][updates2[section].length-1]; 
+                updates3[section][updates3[section].length-2] = updates3[section][updates3[section].length-1]; 
+
+
+            }
+            data_mod.push(updates);
+            original.push(updates2);
+            view.push(updates3);
+        }
+        this.DATA_MOD = data_mod;
+        this.DATA_ORIGINAL = original;
+        this.DATA_VIEW = view;
+        },
+        updateRender: function () {
+            // clear scene
+            this.clear_3d_scene();
+            // update in/out distances + rotation
+            this.updateData(this.update_in_out_station);
+            // update in/out orthogonal distribution
+            this.updateData(this.update_station_alignment);
+            // update view_data
+            this.update_global_view();
+            // create geometries
+            this.update_3d_objects();
+            // draw 3d models
+            this.update_3d_scene();
+        },
 
         updateData: function (fun) {
             for (let line = 0; line < this.DATA_MOD.length; line++) {
@@ -444,40 +517,45 @@ export default {
                     fun(this.DATA_MOD[line][section], section, line);
                 }
             }
-            this.update_global_mix();
         },
 
-        update_global_mix: function(){
-            for (let line = 0; line < this.DATA_MOD.length; line++) {
-                for (let section = 0; section < this.DATA_MOD[line].length; section++) {
-                    for (let vec = 0; vec < this.DATA_MOD[line][section].length; vec++) {
-                        let t = this.GUI_CONTROLS.GLOBAL_MIX;                        
-                        let y = this.DATA_MOD[line][section][vec].y;
-                        let x1 = this.DATA_MOD[line][section][vec].x * t;
-                        let z1 = this.DATA_MOD[line][section][vec].z * t;  
-                        let x2 = this.DATA_ORIGINAL[line][section][vec].x * (1-t);
-                        let z2 = this.DATA_ORIGINAL[line][section][vec].z * (1-t);
-                        let x3 = x1 + x2;
-                        let z3 = z1 + z2;
-                        this.DATA_VIEW[line][section][vec] = new THREE.Vector3(x3, y, z3);
-                    }
-                }
-            }
-        },
 
         update_in_out_station: function (data, section, line) {
+
             let stati_in = data[data.length - 1];
-            let point_in = data[data.length - 2];
+            let point_in = data[data.length - 3];
             let stati_out = data[0];
-            let point_out = data[1];
-            this.DATA_MOD[line][section][1] = this.update_distance(stati_out, point_out);
-            this.DATA_MOD[line][section][data.length - 2] = this.update_distance(stati_in, point_in);
+            let point_out = data[2];
+            this.DATA_MOD[line][section][2] = this.update_distance(stati_out, point_out);
+            this.DATA_MOD[line][section][data.length - 3] = this.update_distance(stati_in, point_in);
             stati_in = this.DATA_MOD[line][section][this.DATA_MOD[line][section].length - 1];
-            point_in = this.DATA_MOD[line][section][this.DATA_MOD[line][section].length - 2];
+            point_in = this.DATA_MOD[line][section][this.DATA_MOD[line][section].length - 3];
             stati_out = this.DATA_MOD[line][section][0];
-            point_out = this.DATA_MOD[line][section][1];
-            this.DATA_MOD[line][section][1] = this.rotatePointAround(stati_out, point_out);
-            this.DATA_MOD[line][section][data.length - 2] = this.rotatePointAround(stati_in, point_in);
+            point_out = this.DATA_MOD[line][section][2];
+            this.DATA_MOD[line][section][2] = this.rotatePointAround(stati_out, point_out);
+            this.DATA_MOD[line][section][data.length - 3] = this.rotatePointAround(stati_in, point_in);
+           
+        
+        },
+
+        update_station_alignment: function(data, section, line){
+            // let stati_in = this.DATA_MOD[line][section][this.DATA_MOD[line][section].length - 1];
+            // let point_in = this.DATA_MOD[line][section][this.DATA_MOD[line][section].length - 2];
+            // this.DATA_MOD[line][section][data.length - 2] = this.rotatePointAround(stati_in, point_in);
+
+            let stati_out = this.DATA_MOD[line][section][0];
+            let point_out = this.DATA_MOD[line][section][1];
+            this.DATA_MOD[line][section][1] = this.update_distribution(stati_out, point_out);
+        },
+
+        update_distribution: function(p1, p2, a=this.GUI_CONTROLS.IN_OUT_ALIGN_ANGLE){   
+
+            // let station = new THREE.Vector2(p1.x, p1.z);
+            // let point = new THREE.Vector2(p2.x, p2.z);
+            let p = this.rotatePointAround(p1, p2, a, -1);//.normalize().multiplyScalar(this.IN_OUT_ALIGNMENT);
+            // point = station_new.add(point.sub(station));
+            return p;
+
         },
 
         update_distance: function (p1, p2) {
@@ -487,40 +565,29 @@ export default {
             return new THREE.Vector3(point.x, p1.y, point.y);
         },
 
-        rotatePointAround: function (p1, p2) {
+        rotatePointAround: function (p1, p2, angle=this.GUI_CONTROLS.IN_OUT_ANGLE) {
             let axis = new THREE.Vector2(p1.x, p1.z);
             let point = new THREE.Vector2(p2.x, p2.z);
             let current = this.getAngle(axis, point);
-            let target = this.GUI_CONTROLS.IN_OUT_ANGLE + (Math.floor(current / 90) * 90); // unreadable, but elegant conditional switch-statement ;)
+            let target = angle + (Math.floor(current / 90) * 90); // unreadable, but elegant conditional switch-statement ;)
             let r = point.rotateAround(axis, -THREE.MathUtils.degToRad(target - current));
             return new THREE.Vector3(r.x, p1.y, r.y);
         },
 
-        subdivide: function () {
+    
 
-            // local duplicates to avoid overwrite original referenced data
-
-            let data_mod = [];
-            let original = [];
-            let view = [];
-
-            for (let t = 0; t < this.DATA_ORIGINAL.length; t++) {
-                let updates = [];
-                let updates2= [];
-                let updates3 = [];
-                for (let section = 0; section < this.DATA_ORIGINAL[t].length - 1; section++) {
-                    updates.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(5));
-                    updates2.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(5));
-                    updates3.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(5));
+        update_global_view: function(){
+            for (let line = 0; line < this.DATA_MOD.length; line++) {
+                for (let section = 0; section < this.DATA_MOD[line].length; section++) {
+                    for (let vec = 0; vec < this.DATA_MOD[line][section].length; vec++) {
+                        //weighted average between two vectors
+                        let t = this.GUI_CONTROLS.GLOBAL_MIX;                        
+                        let x = (this.DATA_MOD[line][section][vec].x * t) + (this.DATA_ORIGINAL[line][section][vec].x * (1-t));
+                        let z = (this.DATA_MOD[line][section][vec].z * t) + (this.DATA_ORIGINAL[line][section][vec].z * (1-t));
+                        this.DATA_VIEW[line][section][vec] = new THREE.Vector3(x, this.DATA_MOD[line][section][vec].y, z);
+                    }
                 }
-                data_mod.push(updates);
-                original.push(updates2);
-                view.push(updates3);
             }
-
-            this.DATA_MOD = data_mod;
-            this.DATA_ORIGINAL = original;
-            this.DATA_VIEW = view;
         },
 
         clear_3d_scene: function () {
@@ -594,29 +661,7 @@ export default {
             return line;
         },
 
-        updateRender: function () {
-            // clear scene
-            this.clear_3d_scene();
-            // update in/out distances + rotation
-            this.updateData(this.update_in_out_station);
-            // create geometries
-            this.update_3d_objects();
-            // draw 3d models
-            this.update_3d_scene();
-        },
-
         emptyPointer: function () { },
-
-        modTRAINLINES: function () {
-
-
-            // subdivide
-            this.subdivide();
-            // initial render
-            this.updateRender();
-            // this.getTRAINLINES = this.emptyPointer();  
-        },
-
 
         getMapData: function () {
             fetch("./europe_borders_7MB_6p.geojson").then((response) => {
