@@ -14,7 +14,6 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import Stats from 'three/examples/jsm/libs/stats.module'
 import * as GEOLIB from "geolib";
 
-
 import DBSANS from './../../public/DB Sans Bold/DB Sans Bold.ttf';
 
 export default {
@@ -143,8 +142,6 @@ export default {
 
             MAT_NAME_OPAQUE: new THREE.MeshBasicMaterial({ color: 0x484848, transparent: true, opacity: 1 }),
 
-
-
             COUNTRIES: [
                 "Germany",
                 "France",
@@ -189,9 +186,7 @@ export default {
                 ["München", "Nürnberg", "Frankfurt"],
                 ["München", "Stuttgart", "Frankfurt"],
             ],
-
         }
-
     },
 
     mounted() {
@@ -453,19 +448,21 @@ export default {
         },
 
         update_global_mix: function(){
-            console.log("GLOBAL MIX", this.GUI_CONTROLS.GLOBAL_MIX);
-            console.log("ORIGINAL", this.DATA_ORIGINAL);
-            console.log("MOD", this.DATA_MOD);
-
-            // ###############
-            // ###############
-            // ###############
-
-            this.DATA_VIEW = this.DATA_ORIGINAL;
-
-            // ###############
-            // ###############
-            // ###############
+            for (let line = 0; line < this.DATA_MOD.length; line++) {
+                for (let section = 0; section < this.DATA_MOD[line].length; section++) {
+                    for (let vec = 0; vec < this.DATA_MOD[line][section].length; vec++) {
+                        let t = this.GUI_CONTROLS.GLOBAL_MIX;                        
+                        let y = this.DATA_MOD[line][section][vec].y;
+                        let x1 = this.DATA_MOD[line][section][vec].x * t;
+                        let z1 = this.DATA_MOD[line][section][vec].z * t;  
+                        let x2 = this.DATA_ORIGINAL[line][section][vec].x * (1-t);
+                        let z2 = this.DATA_ORIGINAL[line][section][vec].z * (1-t);
+                        let x3 = x1 + x2;
+                        let z3 = z1 + z2;
+                        this.DATA_VIEW[line][section][vec] = new THREE.Vector3(x3, y, z3);
+                    }
+                }
+            }
         },
 
         update_in_out_station: function (data, section, line) {
@@ -501,24 +498,29 @@ export default {
 
         subdivide: function () {
 
-            // local duplicates to avoid overwrite referenced data
+            // local duplicates to avoid overwrite original referenced data
 
             let data_mod = [];
             let original = [];
+            let view = [];
 
             for (let t = 0; t < this.DATA_ORIGINAL.length; t++) {
                 let updates = [];
                 let updates2= [];
+                let updates3 = [];
                 for (let section = 0; section < this.DATA_ORIGINAL[t].length - 1; section++) {
                     updates.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(5));
                     updates2.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(5));
+                    updates3.push(new THREE.LineCurve3(this.DATA_ORIGINAL[t][section], this.DATA_ORIGINAL[t][section + 1]).getSpacedPoints(5));
                 }
                 data_mod.push(updates);
                 original.push(updates2);
+                view.push(updates3);
             }
 
             this.DATA_MOD = data_mod;
             this.DATA_ORIGINAL = original;
+            this.DATA_VIEW = view;
         },
 
         clear_3d_scene: function () {
@@ -556,19 +558,7 @@ export default {
 
         update_3d_objects: function () {
 
-            // let DATA = this.DATA_MOD;
-            
-            // ###############
-            // ###############
-            // ###############
-
-            // let DATA = this.DATA_VIEW;
-            let DATA = this.DATA_MOD;
-            
-            // ###############
-            // ###############
-            // ###############
-            
+            let DATA = this.DATA_VIEW;
 
             let models_connections = [];
             let models_sections = [];            
