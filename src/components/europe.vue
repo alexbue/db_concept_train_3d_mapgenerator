@@ -37,9 +37,14 @@ export default {
             },
             GUI_RESET: new function(){
                 this.GUI_RESET = function(){
-
                 };
-            },         
+            },
+
+            GUI_RESET_CAMERA: new function(){
+                this.GUI_RESET = function(){
+                };
+            },
+            
 
             // 3D OBJECTS
             MODEL_SECTIONS: [],
@@ -231,8 +236,11 @@ export default {
             folder.open();
             let folder2 = this.GUI.addFolder("globals");
             folder2.add(this.GUI_CONTROLS, 'GLOBAL_MIX', 0, 1).name('GLOBAL MIX').onChange(() => { this.updateRender() });
-            folder2.add(this.GUI_RESET, "GUI_RESET").name("RESET").onChange(() => { this.reset_gui(); this.updateRender() });
+            folder2.add(this.GUI_RESET, "GUI_RESET").name("RESET MODIFIER").onChange(() => { this.reset_gui(); this.updateRender() });
             folder2.open();
+            let folder3 = this.GUI.addFolder("camera");
+            folder3.add(this.GUI_RESET_CAMERA, "GUI_RESET").name("RESET CAMERA").onChange(() => { this.reset_camera(); this.updateRender() });
+            folder3.open();
 
             this.FONTLOADER = new FontLoader();
             this.TTFLOADER = new TTFLoader();
@@ -452,12 +460,19 @@ export default {
 
         clamp: function (num, min, max) { return Math.min(Math.max(num, min), max); },
         getAngle: function (a, b) { return -Math.atan2((b.y - a.y), (b.x - a.x)) * 180 / Math.PI; },
+
         reset_gui: function(){
             this.GUI_CONTROLS.GLOBAL_MIX = 1; 
             this.GUI_CONTROLS.IN_OUT_DISTANCE = 0.03;
             this.GUI_CONTROLS.IN_OUT_ANGLE = 45;
             this.GUI_CONTROLS.IN_OUT_ALIGNMENT = 0.002;
             this.GUI_CONTROLS.IN_OUT_ALIGN_ANGLE = 30;
+        },
+
+        reset_camera: function(){
+             this.camera.zoom = 1800;
+            this.camera.position.set(0, 4, 0); // XYZ
+            this.camera.lookAt(0, 0, 0);
         },
     
         // #
