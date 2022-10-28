@@ -562,7 +562,8 @@ export default {
             // ###############
             // ###############
 
-            let DATA = this.DATA_VIEW;
+            // let DATA = this.DATA_VIEW;
+            let DATA = this.DATA_MOD;
             
             // ###############
             // ###############
