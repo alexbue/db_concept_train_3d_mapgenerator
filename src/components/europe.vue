@@ -1,6 +1,6 @@
 <template>
     <div id="container">
-    </div>
+     </div>
 </template>
 
 <script>
@@ -24,7 +24,10 @@ export default {
 
         return {
 
-            STATS: new Stats(),
+            FPS: new Stats(),
+            RAM: new Stats(),
+            MS: new Stats(),
+
             GUI: new dat.GUI({ width: 400 }),
 
             // GUI CONTROLS:
@@ -225,7 +228,15 @@ export default {
             }
 
             // STATS
-            document.body.appendChild(this.STATS.dom);
+            this.FPS.showPanel( 0 );
+            this.RAM.showPanel( 2 );
+            this.MS.showPanel( 1 );
+            this.RAM.domElement.style.cssText = 'position:absolute;top:0px;left:0px;';
+            this.FPS.domElement.style.cssText = 'position:absolute;top:0px;left:80px;';
+            this.MS.domElement.style.cssText = 'position:absolute;top:0px;left:160px;';
+            document.body.appendChild(this.RAM.domElement);
+            document.body.appendChild(this.FPS.domElement);
+            document.body.appendChild(this.MS.domElement);
 
             // GUI
             let folder = this.GUI.addFolder("modifier");
@@ -299,7 +310,9 @@ export default {
             this.renderer.render(this.scene, this.camera);
             this.controls.update();
             this.animateToCamera();
-            this.STATS.update();
+            this.FPS.update();
+            this.RAM.update();
+            this.MS.update();
         },
 
         animateToCamera: function () {
@@ -837,13 +850,13 @@ export default {
     text-align: center;
     color: #2c3e50;
     background-color: red;
-}
+};
 
-;
+
 
 #gui {
     width: 800px;
-}
+};
 
-;
+
 </style>
