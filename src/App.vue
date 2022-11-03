@@ -39,7 +39,7 @@ export default {
 *{
   margin: 0;
   padding: 0;
-  
+
 }
 
 #app {
@@ -58,10 +58,11 @@ export default {
 
 #banner {
     background-color: rgba(255, 0, 0, 0);
-    background-image: url("./../public/banner_01_small.png");
+    background-image: url("./../public/db_netze_logo.svg");
     background-repeat: no-repeat;
     background-position-y: bottom;
-    background-position-x: center;
+    background-position-x: right;
+    background-size: 160px;
     pointer-events: none;
     right: 0;
     top: 0; 
@@ -73,16 +74,17 @@ export default {
     justify-content: center;
     align-items: center;
     z-index: 99999; 
-    margin: 0;
-   padding: 0;
+    margin-bottom: 50px;
+    margin-right: 70px;
+    padding: 0;
     }
 
 #bottom {
 
   background-color: rgba(255, 0, 0, 0);
-  background-image: url("./../public/banner_01_bg_small.png");
+  /* background-image: url("./../public/banner_01_bg_small.png");
   background-repeat: repeat-x;
-  background-position-y: bottom;
+  background-position-y: bottom; */
   pointer-events: none;
   right: 0;
   top: 0; 
