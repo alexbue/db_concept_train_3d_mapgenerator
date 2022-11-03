@@ -49,6 +49,10 @@ export default {
   color: #2c3e50;
   margin: 0;
   padding: 0;
+  position: absolute;
+  top:0;
+  left:0;
+  overflow:hidden;
 }
 
 #banner {
