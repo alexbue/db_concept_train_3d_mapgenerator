@@ -36,7 +36,7 @@ export default {
                 this.GLOBAL_DEBUG_MODE = true;
                 this.IN_OUT_DISTANCE = 0.03;
                 this.IN_OUT_ANGLE = 45;
-                this.IN_OUT_ALIGNMENT = 0.002;
+                this.IN_OUT_ALIGNMENT_DISTANCE = 0.004;
                 this.IN_OUT_ALIGN_ANGLE = 30;
             },
             GUI_RESET: new function(){
@@ -67,15 +67,15 @@ export default {
             material_building: new THREE.MeshNormalMaterial(),
             HEIGHT: 1,
 
-            center: [10, 51],
-            SCALE: 1000000,
+            xy_center: [10, 51],
+            map_scale: 1000000,
 
             k: 0,
 
             FONTLOADER: null,
             TTFLOADER: null,
 
-            OBJ_HEIGHT_DEFAULT: 0.025,
+            y_height_default: 0.025,
 
             COUNTRIES_MESH: [],
             COUNTRIES_TEXT: [],
@@ -86,12 +86,12 @@ export default {
             ADAPTIVE_TEXT_HEIGHT_MAX: 0.05,
             COUNTRIES_POINT: [],
 
-            CITIES_TEXT: [],
-            CITIES_TEXT_ROT: [],
-            CITIES_TEXT_POS: [],
+            stations_obj: [],
+            stations_rot: [],
+            stations_pos: [],
 
             GEO_POINT: new THREE.BoxGeometry(0.005, 0.005, 0.005),
-            GEO_POINT_LINE: new THREE.SphereGeometry(0.002, 8, 4),
+            geo_station_sphere: new THREE.SphereGeometry(0.002, 8, 4),
             GEO_SPHERE: new THREE.SphereGeometry(0.005, 16, 8),
             GEO_STATION: new THREE.BoxGeometry(0.01, 0.01, 0.02),
 
@@ -103,16 +103,16 @@ export default {
 
             // TRAINLINE DATA
             
-            DATA_ORIGINAL: [],
+            data_vectors2: [],
             DATA_MOD: [],             
-            DATA_VIEW: [],             
-
+            DATA_VIEW: [],  
+            
             // THREEJS-OBJECT REFERENCES
 
             GRIDHELPER: null,
 
             COL_OCEAN: new THREE.Color(0xabd8ea),
-            COL_TARGET: new THREE.Color(0xF8F8FF), // white
+            COL_TARGET: new THREE.Color(0x181818), // white
             COL_REST: new THREE.Color(0xCCFF0CC), // green
             COL_EDGES: new THREE.Color(0x97B49C), // dark green       
 
@@ -134,7 +134,7 @@ export default {
                 new THREE.Color(0xff686b), // green 2 
             ],
 
-            MAT_COLOR_MAPS: [
+            mat_colormap: [
                 new THREE.LineBasicMaterial({ color: 0xFFADAD, linewidth: 3 }),
                 new THREE.LineBasicMaterial({ color: 0xFFD6A5, linewidth: 3 }),
                 new THREE.LineBasicMaterial({ color: 0xFDFFB6, linewidth: 3 }),
@@ -151,7 +151,9 @@ export default {
             MAT_BASIC_BLACK: new THREE.MeshBasicMaterial({ color: 0x000000 }),
             MAT_BASIC_RED: new THREE.MeshBasicMaterial({ color: 0xff0000 }),
             MAT_BASIC_WHITE: new THREE.MeshBasicMaterial({ color: 0xFAF8F6 }),
-            MAT_TEXT: new THREE.MeshBasicMaterial({ color: 0x484848 }),
+            // MAT_TEXT: new THREE.MeshBasicMaterial({ color: 0x484848 }),
+
+            MAT_TEXT: new THREE.MeshBasicMaterial({ color: 0xff0000 }),
 
             MAT_LINE_EDGES: new THREE.LineBasicMaterial({ color: new THREE.Color(0x97B49C) }),
 
@@ -177,30 +179,36 @@ export default {
                 "Slovakia",
             ],
 
-            TRAIN_STATIONS: [
-                "München Hbf",
-                "Frankfurt (Main) Hbf",
-                "Nürnberg",
-                "Leipzig",
-                "Stuttgart",
-            ],
-
             CITIES: [
                 "München",
                 "Frankfurt",
                 "Nürnberg",
                 "Leipzig",
                 "Stuttgart",
-            ],
+                "Hamburg",
+                "Berlin",
+       ],
 
             TRAINLINES: [
                 ["München", "Stuttgart", "Leipzig"],
                 ["München", "Leipzig"],
-                // ["München", "Stuttgart", "Frankfurt", "Leipzig"],
-                // ["München", "Stuttgart", "Frankfurt", "Leipzig"],
-                // ["München", "Nürnberg", "Frankfurt"],
-                // ["München", "Stuttgart", "Frankfurt"],
+                ["München", "Stuttgart", "Frankfurt", "Leipzig"],
+                ["München", "Stuttgart", "Frankfurt", "Leipzig"],
+                ["München", "Nürnberg", "Frankfurt"],
+                ["München", "Stuttgart", "Frankfurt"],
+                ["München", "Stuttgart", "Leipzig", "Hamburg"],
+                ["München", "Leipzig", "Hamburg"],
+                ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
+                ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
+                ["München", "Nürnberg", "Frankfurt", "Hamburg"],
+                ["München", "Stuttgart", "Frankfurt", "Hamburg"],
+                ["München", "Nürnberg", "Berlin", "Hamburg"],
+                ["München", "Nürnberg", "Berlin", "Hamburg"],
+                ["München", "Nürnberg", "Berlin", "Hamburg"],
+                ["München", "Nürnberg", "Berlin", "Hamburg"],
             ],
+
+            data_occu: {},
         }
     },
 
@@ -211,6 +219,8 @@ export default {
         this.getMapData();
         this.getDataTrainstations();
         this.addCountryNames();
+        
+
 
     },
 
@@ -243,7 +253,7 @@ export default {
             let folder = this.GUI.addFolder("modifier");
             folder.add(this.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.04).onChange(() => { this.updateRender() });
             folder.add(this.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange(() => { this.updateRender() });
-            folder.add(this.GUI_CONTROLS, 'IN_OUT_ALIGNMENT', 0.001, 0.01).onChange(() => { this.updateRender() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_ALIGNMENT_DISTANCE', 0.004, 0.02).onChange(() => { this.updateRender() });
             folder.add(this.GUI_CONTROLS, 'IN_OUT_ALIGN_ANGLE', 1, 89).onChange(() => { this.updateRender() });
             folder.open();
             let folder2 = this.GUI.addFolder("globals");
@@ -280,7 +290,7 @@ export default {
             this.GRIDHELPER = new THREE.GridHelper(60, 150, new THREE.Color(0xff0000), new THREE.Color(0xffffff));
             this.scene.add(this.GRIDHELPER);
 
-            // this.scene.fog = new THREE.Fog(this.COL_OCEAN, 0.001, 12);
+            this.scene.fog = new THREE.Fog(this.COL_OCEAN, 0.001, 12);
 
 
             let light0 = new THREE.AmbientLight(0xfafafa, 0.005);
@@ -329,8 +339,8 @@ export default {
                 this.COUNTRIES_TEXT[m].material.opacity = this.clamp(this.camera.position.y, 0, 1.5) / 1.5;
             }
 
-            for (let m = 0; m < this.CITIES_TEXT.length; m++) {
-                this.CITIES_TEXT[m].position.y = this.clamp(((1 - (this.clamp(this.camera.position.y, 0, 3.85) / 3.85)) * this.ADAPTIVE_TEXT_HEIGHT_MAX), this.ADAPTIVE_TEXT_HEIGHT_MIN, this.ADAPTIVE_TEXT_HEIGHT_MAX);
+            for (let m = 0; m < this.stations_obj.length; m++) {
+                this.stations_obj[m].position.y = this.clamp(((1 - (this.clamp(this.camera.position.y, 0, 3.85) / 3.85)) * this.ADAPTIVE_TEXT_HEIGHT_MAX), this.ADAPTIVE_TEXT_HEIGHT_MIN, this.ADAPTIVE_TEXT_HEIGHT_MAX);
             }
 
             // ROTATION
@@ -343,8 +353,8 @@ export default {
                         this.COUNTRIES_TEXT[m].lookAt(this.camera.position);
                     }
                     // CITY NAMES
-                    for (let m = 0; m < this.CITIES_TEXT.length; m++) {
-                        this.CITIES_TEXT[m].lookAt(this.camera.position);
+                    for (let m = 0; m < this.stations_obj.length; m++) {
+                        this.stations_obj[m].lookAt(this.camera.position);
                     }
                 }
                 else {
@@ -355,9 +365,9 @@ export default {
                         this.COUNTRIES_TEXT[m].rotation.z = this.camera.rotation.z;
                     }
                     // CITY NAMES
-                    for (let m = 0; m < this.CITIES_TEXT.length; m++) {
-                        this.CITIES_TEXT[m].lookAt(this.camera.position);
-                        this.CITIES_TEXT[m].rotation.z = this.camera.rotation.z;
+                    for (let m = 0; m < this.stations_obj.length; m++) {
+                        this.stations_obj[m].lookAt(this.camera.position);
+                        this.stations_obj[m].rotation.z = this.camera.rotation.z;
                     }
                 }
 
@@ -371,15 +381,14 @@ export default {
                     this.COUNTRIES_TEXT[m].rotation.z = this.camera.rotation.z;
                 }
                 // CITY NAMES
-                for (let m = 0; m < this.CITIES_TEXT.length; m++) {
-                    this.CITIES_TEXT[m].rotation.x = this.CITIES_TEXT_ROT[m][0];
-                    this.CITIES_TEXT[m].rotation.y = this.CITIES_TEXT_ROT[m][1];
+                for (let m = 0; m < this.stations_obj.length; m++) {
+                    this.stations_obj[m].rotation.x = this.stations_rot[m][0];
+                    this.stations_obj[m].rotation.y = this.stations_rot[m][1];
                     // this.COUNTRIES_TEXT[m].rotation.z = this.COUNTRIES_TEXT_ROT[m][2];
-                    this.CITIES_TEXT[m].rotation.z = this.camera.rotation.z;
+                    this.stations_obj[m].rotation.z = this.camera.rotation.z;
                 }
             }
         },
-
 
         addMesh_Point: function (coordinates, h) {
             // POINT ;
@@ -424,9 +433,9 @@ export default {
                 textMesh.rotateZ(Math.PI);
                 textMesh.rotateY(Math.PI);
                 this.scene.add(textMesh);
-                this.CITIES_TEXT_POS.push([textMesh.position.x, textMesh.position.y, textMesh.position.z]);
-                this.CITIES_TEXT_ROT.push([textMesh.rotation.x, textMesh.rotation.y, textMesh.rotation.z]);
-                this.CITIES_TEXT.push(textMesh);
+                this.stations_pos.push([textMesh.position.x, textMesh.position.y, textMesh.position.z]);
+                this.stations_rot.push([textMesh.rotation.x, textMesh.rotation.y, textMesh.rotation.z]);
+                this.stations_obj.push(textMesh);
             })
         },
 
@@ -436,7 +445,7 @@ export default {
                     response.json()
                         .then((data) => {
                             this.addTrainStations(data);
-                            this.getTRAINLINES(data);
+                            this.get_data_trainlines(data);
                         })
                     // .catch(() =>{ /* NO ERROR MSGS */ })
                 })
@@ -446,37 +455,130 @@ export default {
             for (let i = 0; i < data.length; i++) {
                 if (this.CITIES.includes(data[i]["city"])) {
                     // console.log(data[i]["city"]);
-                    let coordinates = this.getGPSRelativePosition([data[i]["lng"], data[i]["lat"]], this.center);
-                    this.addMesh_Station(coordinates, this.OBJ_HEIGHT_DEFAULT);
-                    this.addMesh_StationNames([coordinates[0] - 0.002, coordinates[1] - 0.005], this.OBJ_HEIGHT_DEFAULT + 0.005, data[i]["city"]);
+                    let coordinates = this.getGPSRelativePosition([data[i]["lng"], data[i]["lat"]], this.xy_center);
+                    this.addMesh_Station(coordinates, this.y_height_default);
+                    this.addMesh_StationNames([coordinates[0] - 0.002, coordinates[1] - 0.005], this.y_height_default + 0.005, data[i]["city"]);
                 }
             }
         },
 
-        getTRAINLINES: function (data) {
-            let trainline_paths = [];
+
+        get_data_trainlines: function (data) {
+            let trainlines_vector2 = [];
             for (let i = 0; i < this.TRAINLINES.length; i++) {
-                let path = []
-                for (let j = 0; j < this.TRAINLINES[i].length; j++) {
+                let path = [];
+                for (let s = 0; s < this.TRAINLINES[i].length; s++) {
+                    
                     for (let t = 0; t < data.length; t++) {
-                        if (data[t]["city"] == this.TRAINLINES[i][j]) {
-                            let coordinates = this.getGPSRelativePosition([data[t]["lng"], data[t]["lat"]], this.center);
-                            path.push(new THREE.Vector3(-coordinates[1], this.OBJ_HEIGHT_DEFAULT, -coordinates[0]));
+
+                        if (data[t]["city"] == this.TRAINLINES[i][s]) {
+                            
+                            // get pos vec3
+                            let coordinates = this.getGPSRelativePosition([data[t]["lng"], data[t]["lat"]], this.xy_center);
+                            let vec = new THREE.Vector3(-coordinates[1], this.y_height_default, -coordinates[0]);
+                            path.push(vec);
+
+                            /*[
+                                {
+                                "city": "München", 
+                                "features": {
+                                    "lat": "52.5167", 
+                                    "lng": "13.3833", 
+                                    "xyz_coordinates": "vector3",
+                                    "sum_edges": 5,
+                                    "quadrants": [0,0,1,2]
+                                    }
+                                }
+                            ]
+                            ,*/
+
+                            this.data_occu[data[t]["city"]] = {};
+                            this.data_occu[data[t]["city"]].city = data[t]["city"];
+                            this.data_occu[data[t]["city"]].lng = data[t]["lng"];
+                            this.data_occu[data[t]["city"]].lat= data[t]["lat"];
+                            this.data_occu[data[t]["city"]].vec3 = vec;
+                            this.data_occu[data[t]["city"]].quadrant = [0,0,0,0];
+                            this.data_occu[data[t]["city"]].sum = [0,0,0,0];
                         }
                     }
                 }
-                trainline_paths.push(path);
+                trainlines_vector2.push(path);
+                
             }
-            this.DATA_ORIGINAL = trainline_paths;
+
+            // console.log(this.data_occu);
+            this.get_station_quadrants();
+            // console.log(this.data_occu);           
+            
+            this.data_vectors2 = trainlines_vector2;
+
+            console.log(this.DATA_MOD);
 
             // subdivide
             this.subdivide();
             // initial render
             this.updateRender();
-
         },
 
+        get_station_quadrants: function(){
 
+                 /*[
+                                {
+                                "city": "München", 
+                                "features": {
+                                    "lat": "52.5167", 
+                                    "lng": "13.3833", 
+                                    "xyz_coordinates": "vector3",
+                                    "sum_edges": 5,
+                                    "quadrants": [0,0,1,2]
+                                    }
+                                }
+                            ]
+                            ,*/
+
+            
+            for (let t = 0; t < this.TRAINLINES.length; t++) {                    
+                    for (let s = 0; s < this.TRAINLINES[t].length; s++) {          
+                         if (s == 0){ // check outgoing connection 
+
+                            let station = this.data_occu[ this.TRAINLINES[t][s] ].vec3;
+                            let next = this.data_occu[ this.TRAINLINES[t][s+1] ].vec3;
+                            let quadrant = this.get_quadrant(station, next);
+                            this.data_occu[this.TRAINLINES[t][s]].quadrant[quadrant] += 1;
+                            this.data_occu[this.TRAINLINES[t][s]].sum[quadrant] += 1;
+                         }
+                         else if (s == this.TRAINLINES[t].length-1 ){ // check incoming connection
+
+                            let station = this.data_occu[ this.TRAINLINES[t][s] ].vec3;
+                            let previous = this.data_occu[ this.TRAINLINES[t][s-1] ].vec3;
+                            let quadrant = this.get_quadrant(station, previous);
+                            this.data_occu[this.TRAINLINES[t][s]].quadrant[quadrant] += 1;
+                            this.data_occu[this.TRAINLINES[t][s]].sum[quadrant] += 1;
+                         }
+                         else{ //  check in+out connection
+
+                            let station = this.data_occu[ this.TRAINLINES[t][s] ].vec3;
+                            let next = this.data_occu[ this.TRAINLINES[t][s+1] ].vec3;
+                            let quadrant1 = this.get_quadrant(station, next);
+                            this.data_occu[this.TRAINLINES[t][s]].quadrant[quadrant1] += 1;
+                            this.data_occu[this.TRAINLINES[t][s]].sum[quadrant1] += 1;
+                            let previous = this.data_occu[ this.TRAINLINES[t][s-1] ].vec3;
+                            let quadrant2 = this.get_quadrant(station, previous);
+                            this.data_occu[this.TRAINLINES[t][s]].quadrant[quadrant2] += 1;   
+                            this.data_occu[this.TRAINLINES[t][s]].sum[quadrant2] += 1;                          
+                         }
+                     }
+                }
+        },
+
+        get_quadrant: function(p1, p2){
+            let axis = new THREE.Vector2(p1.x, p1.z);
+            let point = new THREE.Vector2(p2.x, p2.z);
+            let current = this.getAngle(axis, point);
+            if (current < 0) current = 360 + current;
+            return Math.floor(current / 90);
+        },
+    
         clamp: function (num, min, max) { return Math.min(Math.max(num, min), max); },
         getAngle: function (a, b) { return -Math.atan2((b.y - a.y), (b.x - a.x)) * 180 / Math.PI; },
 
@@ -484,7 +586,7 @@ export default {
             this.GUI_CONTROLS.GLOBAL_MIX = 1; 
             this.GUI_CONTROLS.IN_OUT_DISTANCE = 0.03;
             this.GUI_CONTROLS.IN_OUT_ANGLE = 45;
-            this.GUI_CONTROLS.IN_OUT_ALIGNMENT = 0.002;
+            this.GUI_CONTROLS.IN_OUT_ALIGNMENT_DISTANCE = 0.002;
             this.GUI_CONTROLS.IN_OUT_ALIGN_ANGLE = 30;
             
             // refresh GUI values manually
@@ -512,7 +614,7 @@ export default {
 
         subdivide: function () {
 
-        let data = this.DATA_ORIGINAL;
+        let data = this.data_vectors2;
      
         let data_mod = [];    // local duplicates to avoid overwrite original referenced data
         let original = [];
@@ -549,7 +651,7 @@ export default {
         }
 
         this.DATA_MOD = data_mod;
-        this.DATA_ORIGINAL = original;
+        this.data_vectors2 = original;
         this.DATA_VIEW = view;
 
         },
@@ -557,14 +659,14 @@ export default {
 
         updateRender: function () {
 
-            console.log(this.DATA_MOD);
+            // console.log(this.DATA_MOD);
 
             // clear scene
             this.clear_3d_scene();
             // update in/out distances + rotation
             this.updateData(this.update_in_out_station);
             // // update in/out orthogonal distribution
-            // this.updateData(this.update_station_alignment);
+            this.updateData(this.update_rail_alignment);
             // update view_data
             this.update_global_view();
             // create geometries
@@ -602,40 +704,101 @@ export default {
         
         },
 
-        // update_station_alignment: function(data, l, s){
+        update_rail_alignment: function(data, l, s){
 
-        //     // let stati_out = this.DATA_MOD[l][s][0];
-        //     // let point_out = this.DATA_MOD[l][s][1];
-        //     // this.DATA_MOD[l][s][1] = this.update_distribution(stati_out, point_out);
-        // },
+            // vec[len - 1] = rotation axis point - is clone of station  - should never be altered!
+            // vec[len - 2] = station a           
+            // vec[len - 3] = first point outcoming of station a 
+            // vec[0] = rotation axis point - is clone of station b - should never be altered!
+            // vec[1] = station b                 
+            // vec[2] = last point incoming to station b
 
-        // update_distribution: function(p1, p2, len, index, a=this.GUI_CONTROLS.IN_OUT_ALIGN_ANGLE){   
+            let len  = data[l][s].length; 
 
-        //     // let station = new THREE.Vector2(p1.x, p1.z);
-        //     // let point = new THREE.Vector2(p2.x, p2.z);
-        //     let p = this.rotatePointAround(p1, p2, a, -1);//.normalize().multiplyScalar(this.IN_OUT_ALIGNMENT);
-        //     // point = station_new.add(point.sub(station));
-        //     return p;
+            let vec = data[l][s];         
+            
+            Object.keys(this.data_occu).forEach(key => {
 
-        // },
+            let coordinates = this.data_occu[key].vec3;
 
-        update_distance: function (p1, p2) {
-            let station = new THREE.Vector2(p1.x, p1.z);
-            let point = new THREE.Vector2(p2.x, p2.z);
-            point = point.sub(station).normalize().multiplyScalar(this.GUI_CONTROLS.IN_OUT_DISTANCE).add(station);
-            return new THREE.Vector3(point.x, p1.y, point.y);
+            // console.log(coordinates);
+
+
+            if (coordinates.equals(vec[0])){
+
+                console.log(this.data_occu[key].quadrants);
+
+                let quadrant_index = this.get_quadrant(vec[0], vec[1]);
+                let sum = this.data_occu[key].sum[quadrant_index];
+                let quadrant = this.data_occu[key].quadrant[quadrant_index];
+
+                // console.log(sum);
+                // console.log(quadrant);
+
+                let res = this.update_rail_distance(vec[0], vec[2], sum, quadrant);
+                
+                vec[1] = res[0];         
+                vec[2] = res[1];   
+
+                this.data_occu[key].quadrant[quadrant_index] += 1;     
+                }  
+
+            if (coordinates.equals(vec[len - 1])){
+
+                console.log(this.data_occu[key].quadrants);
+
+                let quadrant_index = this.get_quadrant(vec[len - 1], vec[len - 2]);
+                let sum = this.data_occu[key].sum[quadrant_index];
+
+                // sum = (sum - quadrant) + 1;
+
+                let quadrant = this.data_occu[key].quadrant[quadrant_index];
+
+                // console.log(sum);
+                // console.log(quadrant);
+
+                let res = this.update_rail_distance(vec[len - 1], vec[len - 3], sum, sum-quadrant);
+
+                vec[len - 2]= res[0];         
+                vec[len - 3] = res[1];   
+
+                this.data_occu[key].quadrant[quadrant_index] += 1;     
+                }  
+
+            });
+
+
+        
+
         },
 
-        rotatePointAround: function (p1, p2, angle=this.GUI_CONTROLS.IN_OUT_ANGLE) {
+        update_rail_distance: function(p1, p2, sum, rail){
+
             let axis = new THREE.Vector2(p1.x, p1.z);
             let point = new THREE.Vector2(p2.x, p2.z);
-            let current = this.getAngle(axis, point);
-            let target = angle + (Math.floor(current / 90) * 90); // unreadable, but elegant conditional switch-statement ;)
-            let r = point.rotateAround(axis, -THREE.MathUtils.degToRad(target - current));
-            return new THREE.Vector3(r.x, p1.y, r.y);
+            
+            let distance = axis.distanceTo(point);
+
+            let d = this.GUI_CONTROLS.IN_OUT_ALIGNMENT_DISTANCE;
+ 
+            if (sum % 2 == 0){ // even number of rails
+                d = (rail * d) - (2 * d);
+            }
+            else{ // odd number of rails
+                d = (rail * d) - (1 * d);
+            }
+
+            if ( d < 0) distance *= -1;
+  
+            let vec1 =  point.rotateAround(axis, -THREE.MathUtils.degToRad(-90));
+            vec1 = this.update_distance(p1, new THREE.Vector3(vec1.x, p1.y, vec1.y), d);
+            let vec2 = axis.rotateAround(new THREE.Vector2(vec1.x, vec1.z), -THREE.MathUtils.degToRad(-90));
+            vec2 = this.update_distance(vec1, new THREE.Vector3(vec2.x, p1.y, vec2.y), distance);
+            return [vec1, vec2];
+
         },
 
-    
+        
 
         update_global_view: function(){
             for (let line = 0; line < this.DATA_MOD.length; line++) {
@@ -643,8 +806,8 @@ export default {
                     for (let vec = 0; vec < this.DATA_MOD[line][section].length; vec++) {
                         //weighted average between two vectors
                         let t = this.GUI_CONTROLS.GLOBAL_MIX;                        
-                        let x = (this.DATA_MOD[line][section][vec].x * t) + (this.DATA_ORIGINAL[line][section][vec].x * (1-t));
-                        let z = (this.DATA_MOD[line][section][vec].z * t) + (this.DATA_ORIGINAL[line][section][vec].z * (1-t));
+                        let x = (this.DATA_MOD[line][section][vec].x * t) + (this.data_vectors2[line][section][vec].x * (1-t));
+                        let z = (this.DATA_MOD[line][section][vec].z * t) + (this.data_vectors2[line][section][vec].z * (1-t));
                         this.DATA_VIEW[line][section][vec] = new THREE.Vector3(x, this.DATA_MOD[line][section][vec].y, z);
                     }
                 }
@@ -712,7 +875,7 @@ export default {
         },
 
         createPoint: function (pos_vec3, color_index) {
-            let mesh = new THREE.Mesh(this.GEO_POINT_LINE, this.MAT_COLOR_MAPS[color_index]);
+            let mesh = new THREE.Mesh(this.geo_station_sphere, this.mat_colormap[color_index]);
             mesh.position.x = pos_vec3.x;
             mesh.position.y = pos_vec3.y;
             mesh.position.z = pos_vec3.z;
@@ -721,7 +884,7 @@ export default {
 
         createLine: function (pos_vec3_array, color_index) {
             let geometry = new THREE.BufferGeometry().setFromPoints(pos_vec3_array);
-            let line = new THREE.Line(geometry, this.MAT_COLOR_MAPS[color_index]);
+            let line = new THREE.Line(geometry, this.mat_colormap[color_index]);
             return line;
         },
 
@@ -756,10 +919,11 @@ export default {
             fetch("./countries_centroids_mod.geojson").then((response) => {
                 response.json().then((data) => {
                     for (let c = 0; c < this.COUNTRIES.length; c++) {
+
                         for (let i = 0; i < data.features.length; i++) {
                             if (data.features[i].properties["COUNTRY"] == this.COUNTRIES[c]) {
                                 // console.log(this.COUNTRIES[c]);
-                                let coordinates = this.getGPSRelativePosition(data.features[i].geometry["coordinates"], this.center);
+                                let coordinates = this.getGPSRelativePosition(data.features[i].geometry["coordinates"], this.xy_center);
                                 let mesh = new THREE.Mesh(this.GEO_POINT, this.MAT_BASIC_BLACK);
                                 mesh.position.y = 0.1;
                                 mesh.position.z = -coordinates[0];
@@ -812,7 +976,9 @@ export default {
 
             for (let i = 0; i < patches.length; i++) {
 
-                let shape = this.genShape(patches[i], this.center);
+                let shape = this.genShape(patches[i], this.xy_center);
+
+
                 let geometry = this.genGeometry(shape, { curveSegments: 1, depth: 0.02 * this.HEIGHT, bevelEnabled: false });
                 geometry.rotateX(Math.PI / 2);
                 geometry.rotateZ(Math.PI);
@@ -827,7 +993,7 @@ export default {
             }
         },
 
-        genShape: function (points, center) {
+        genShape: function (points, xy_center) {
 
             let shape = new THREE.Shape();
 
@@ -837,7 +1003,7 @@ export default {
 
                 for (let j = 0; j < p.length; j++) {
 
-                    let elp = this.getGPSRelativePosition(p[j], center);
+                    let elp = this.getGPSRelativePosition(p[j], xy_center);
                     if (j == 0) {
                         shape.moveTo(elp[0], elp[1]);
                     }
@@ -855,25 +1021,6 @@ export default {
             return geometry;
         },
 
-        // alogorithm for normalizing geojson point coordinates while considering map projection distortion
-        getGPSRelativePosition: function (objPos, centerPos) {
-
-            // get gps distance 
-            let dis = GEOLIB.getDistance(objPos, centerPos);
-
-            // get bearing angle
-            let bearing = GEOLIB.getRhumbLineBearing(objPos, centerPos);
-
-            // calculate X by centerpos.x + distance * cos(rad)
-            // calculate Y by centerpos.y + distance * sind(rad)
-            let x = centerPos[0] + (dis * Math.cos(bearing * Math.PI / 180));
-            let y = centerPos[1] + (dis * Math.sin(bearing * Math.PI / 180));
-
-            x /= this.SCALE;
-            y /= this.SCALE;
-
-            return [-x, y]
-        }
     },
 }
 </script>
@@ -882,8 +1029,8 @@ export default {
 #container {
     font-family: Avenir, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-align: center;
+    -moz-osx-font-smoothing: graymap_scale;
+    text-align: xy_center;
     color: #2c3e50;
     background-color: red;
 };
