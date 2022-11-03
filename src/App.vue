@@ -68,6 +68,8 @@ export default {
     justify-content: center;
     align-items: center;
     z-index: 99999; 
+    margin: 0;
+   padding: 0;
     }
 
 #bottom {
@@ -87,6 +89,8 @@ export default {
   justify-content: center;
   align-items: center;
   z-index: 99999; 
+  margin: 0;
+  padding: 0;
   } 
 
 #logo{
@@ -102,6 +106,8 @@ export default {
   justify-content: center;
   align-items: center;
   z-index: 99999;
+  margin: 0;
+  padding: 0;
 }
   
 #loader {
@@ -116,6 +122,8 @@ export default {
     right: 0;
     top: 0;
     z-index: 99999;
+    margin: 0;
+    padding: 0;
 }
 
 #loading_text{
@@ -130,6 +138,8 @@ export default {
     right: 0;
     top: 220px;
     z-index: 99999;
+    margin: 0;
+    padding: 0;
 }
 
 /* KEYFRAMES */
