@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <div id="banner"></div>
+    <div id="bottom">
+      <div id="banner"> </div>
+    </div>
 
    <!-- SPINNER ORBITS -->
 <div id="loader">
@@ -48,18 +50,42 @@ export default {
 }
 
 #banner {
-    background-color: red;
-    background-image: url("./../public/banner_01.png");
+    background-color: rgba(255, 0, 0, 0);
+    background-image: url("./../public/banner_01_small.png");
+    background-repeat: no-repeat;
+    background-position-y: bottom;
+    background-position-x: center;
+    pointer-events: none;
+    right: 0;
+    top: 0; 
+    overflow: hidden;
     position: absolute;
-    display: block;
-    z-index: 99;
-    left: 0%;
-    bottom: 0%;
-    width:1421px;
-    height:179px;
-    overflow-x: hidden;
-    overflow-y: hidden;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999; 
     }
+
+#bottom {
+
+  background-color: rgba(255, 0, 0, 0);
+  background-image: url("./../public/banner_01_bg_small.png");
+  background-repeat: repeat-x;
+  background-position-y: bottom;
+  pointer-events: none;
+  right: 0;
+  top: 0; 
+  overflow: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999; 
+  } 
 
 #logo{
   background-image: url("./../public/db_logo.png");
@@ -77,7 +103,7 @@ export default {
 }
   
 #loader {
-    background: rgba(255, 255, 255, 1);  
+    background: rgba(255, 255, 255, 0.5);  
     bottom: 0;
     left: 0;
     overflow: hidden;
