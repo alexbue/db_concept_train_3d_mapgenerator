@@ -103,7 +103,7 @@ export default {
 }
   
 #loader {
-    background: rgba(255, 255, 255, 0.5);  
+    background: rgba(255, 255, 255, 1);  
     bottom: 0;
     left: 0;
     overflow: hidden;
