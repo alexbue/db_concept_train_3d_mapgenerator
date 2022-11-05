@@ -65,22 +65,3 @@ export function init_scene() {
     globals.controls.screenSpacePanning = false;
     globals.controls.maxDistance = 80;
 }
-
-export function loader_hide(){
-    globals.loader.style.visibility = "hidden";
-}
-
-
-export function renderer_info_log(){
-    console.log("Scene polycount:", globals.renderer.info.render.triangles);
-    console.log("Active Drawcalls:", globals.renderer.info.render.calls);
-    console.log("Textures in Memory", globals.renderer.info.memory.textures);
-    console.log("Geometries in Memory", globals.renderer.info.memory.geometries);
-}
-
-export function reset_camera(){            
-    globals.camera.position.set(0, 4, 0); // XYZ            
-    globals.camera.lookAt(0, 0, 0);
-    globals.camera.rotation.y = Math.PI / 2;
-    globals.camera.zoom = 1800;
-}

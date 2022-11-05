@@ -4,28 +4,24 @@
 
 <script>
 
-
 import { globals } from '@/components/globals.js';
-import { reset_gui, init_gui } from '@/components/gui/gui.js';
+import { init_gui,  renderer_info_log  } from '@/components/gui/gui.js';
 
-import { init_scene, renderer_info_log } from '@/components/render/init.js';
+import { init_scene} from '@/components/render/init.js';
 // import { update_scene } from '@/components/render/update.js';
 
 import { create_map, create_country_names, animate_map } from '@/components/map/map.js';
 
-import { unpack_data } from '@/components/data/data.js';
-import { render_data, render_stations } from '@/components/data/render.js';
-import { preprocess_data } from '@/components/data/processing.js';
+import { unpack_data } from '@/components/trainnet/data.js';
+import { init_data, build_data } from '@/components/trainnet/processing.js';
+import { update_render, render_stations } from '@/components/trainnet/render.js';
+
 
 const map = "./europe_borders_7MB_6p.geojson";
 const stations = "./german_top_603_cities.json";
 const country_centroids = "./countries_centroids_mod.geojson";
 
 const trainlines = globals.TRAINLINES;
-
-let data_tl_trainnet = globals.data_tl_trainnet;
-let data_tl_stations = globals.data_tl_stations;
-
 
 export default {
 
@@ -62,14 +58,8 @@ export default {
         fetch(stations).then((response) => {
             response.json().then((data) => {
 
-                [data_tl_trainnet, data_tl_stations] = unpack_data(data, trainlines);
-
-                data_tl_trainnet = preprocess_data(data_tl_trainnet);      
-
-                render_data(data_tl_trainnet)       // inital render
-                render_stations(data_tl_stations);
-
-                renderer_info_log();
+                unpack_data(data, trainlines);                
+                this.build();
 
             })
         });
@@ -82,7 +72,6 @@ export default {
 
             init_scene();
             init_gui();
-            console.log(reset_gui);
 
             let that = this;
             window.addEventListener('resize', onWindowResize, false);
@@ -93,6 +82,8 @@ export default {
             }
 
             this.animate();
+
+            globals.update = this.update;
         },
 
 
@@ -114,11 +105,34 @@ export default {
         },
 
 
-        updateRender: function () {
+        build: function () {
 
-        }
+            init_data(); 
 
+            build_data()
+            update_render();
 
+            render_stations();
+            renderer_info_log();
+            // [data_tl_trainnet, data_tl_stations] = write_station_quadrants(data_tl_trainnet, data_tl_stations)
+
+        },
+
+        update: function (rebuild=false) {
+
+            if (rebuild) {
+
+                build_data();   
+
+            }         
+            
+            update_render();
+            renderer_info_log();
+          
+            
+
+        },
+        
     },
 }
 </script>

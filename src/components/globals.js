@@ -14,8 +14,15 @@ export const globals = {
 
     // new 
 
+    
+    update_data: null,
+
     data_tl_trainnet: null,
-    data_tl_stations: {},
+    data_tl_trainnet_view: null,
+    data_tl_stations: {},   
+   
+    data_mesh_debug_pnts: [],
+    data_mesh_trainlines: [],
 
     stations_obj: [],
     stations_rot: [],
@@ -30,9 +37,48 @@ export const globals = {
     geo_station_sphere: new THREE.SphereGeometry(0.002, 8, 4),
 
     axes_helper: null,
+    
+    
 
 
 
+    GUI: null,
+
+    // GUI CONTROLS:
+    GUI_CONTROLS: new function () {
+
+        // station modifier
+        this.station_sectors = 16;
+
+        // globals
+        this.GLOBAL_MIX = 1;
+
+        // debug
+        this.GLOBAL_DEBUG_MODE = true;
+        this.GLOBAL_GRID_MODE = true;
+        this.GLOBAL_AXIS_MODE = true;
+
+        this.IN_OUT_DISTANCE = 0.03;
+        this.IN_OUT_ANGLE = 45;
+        this.IN_OUT_ALIGNMENT_DISTANCE = 0.004;
+        this.IN_OUT_ALIGN_ANGLE = 30;
+    },
+
+    GUI_INFO_RENDERER: new function(){
+        this.INFO_RENDERER = function(){
+        };
+    },
+
+    GUI_RESET: new function(){
+        this.GUI_RESET = function(){
+        };
+    },
+
+    GUI_RESET_CAMERA: new function(){
+        this.GUI_RESET = function(){
+        };
+    },
+    
 
     COUNTRIES: [
         "Germany",
@@ -68,20 +114,24 @@ export const globals = {
     TRAINLINES: [
         ["München", "Stuttgart", "Leipzig"],
         ["München", "Leipzig"],
+        ["München", "Nürnberg", "Leipzig", "Berlin", "Hamburg"],
         ["München", "Stuttgart", "Frankfurt", "Leipzig"],
+        ["München", "Nürnberg", "Frankfurt"],
+        ["München", "Stuttgart", "Frankfurt"],
+        ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
+        ["München", "Nürnberg", "Frankfurt", "Hamburg"],
+        ["München", "Stuttgart", "Frankfurt", "Hamburg"],
+        ["München", "Leipzig", "Hamburg"],
+        ["München", "Stuttgart", "Leipzig"],
+        ["München", "Leipzig"],
+        ["München", "Nürnberg", "Leipzig", "Berlin", "Hamburg"],
         ["München", "Stuttgart", "Frankfurt", "Leipzig"],
-        // ["München", "Nürnberg", "Frankfurt"],
-        // ["München", "Stuttgart", "Frankfurt"],
-        // ["München", "Stuttgart", "Leipzig", "Hamburg"],
-        // ["München", "Leipzig", "Hamburg"],
-        // ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
-        // ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
-        // ["München", "Nürnberg", "Frankfurt", "Hamburg"],
-        // ["München", "Stuttgart", "Frankfurt", "Hamburg"],
-        // ["München", "Nürnberg", "Leipzig", "Berlin", "Hamburg"],
-        // ["München", "Nürnberg", "Leipzig", "Berlin", "Hamburg"],
-        // ["München", "Nürnberg", "Leipzig", "Berlin", "Hamburg"],
-        // ["München", "Nürnberg", "Leipzig", "Berlin", "Hamburg"],
+        ["München", "Nürnberg", "Frankfurt"],
+        ["München", "Stuttgart", "Frankfurt"],
+        ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
+        ["München", "Nürnberg", "Frankfurt", "Hamburg"],
+        ["München", "Stuttgart", "Frankfurt", "Hamburg"],
+        ["München", "Leipzig", "Hamburg"],
     ],
 
 
@@ -93,35 +143,9 @@ export const globals = {
     RAM: new Stats(),
     MS: new Stats(),
 
-    GUI: null,
-
-    // GUI CONTROLS:
-    GUI_CONTROLS: new function () {
-
-        this.GLOBAL_MIX = 1;
-        this.GLOBAL_DEBUG_MODE = true;
-        this.GLOBAL_GRID_MODE = true;
-        this.GLOBAL_AXIS_MODE = true;
-
-        this.IN_OUT_DISTANCE = 0.03;
-        this.IN_OUT_ANGLE = 45;
-        this.IN_OUT_ALIGNMENT_DISTANCE = 0.004;
-        this.IN_OUT_ALIGN_ANGLE = 30;
-    },
-    GUI_RESET: new function(){
-        this.GUI_RESET = function(){
-        };
-    },
-
-    GUI_RESET_CAMERA: new function(){
-        this.GUI_RESET = function(){
-        };
-    },
-    
+   
 
     // 3D OBJECTS
-    MODEL_SECTIONS: [],
-    MODEL_SECTIONS_CONNECTIONS: [],
 
     // SCENE BASICS
     camera: null,
@@ -204,15 +228,6 @@ export const globals = {
 
 mat_colormap: [
 
-    new THREE.LineBasicMaterial({ color:0x69D2E7, linewidth: 3 }),
-    new THREE.LineBasicMaterial({ color:0xA7DBD8, linewidth: 3 }),
-    new THREE.LineBasicMaterial({ color:0xE0E4CC, linewidth: 3 }),
-    new THREE.LineBasicMaterial({ color:0xF38630, linewidth: 3 }),
-    new THREE.LineBasicMaterial({ color:0xFA6900, linewidth: 3 }),
-    new THREE.LineBasicMaterial({ color:0xFE4365, linewidth: 3 }),
-    new THREE.LineBasicMaterial({ color:0xFC9D9A, linewidth: 3 }),
-    new THREE.LineBasicMaterial({ color:0xF9CDAD, linewidth: 3 }),
-    new THREE.LineBasicMaterial({ color:0xC8C8A9, linewidth: 3 }),
     new THREE.LineBasicMaterial({ color:0x83AF9B, linewidth: 3 }),
     new THREE.LineBasicMaterial({ color:0xECD078, linewidth: 3 }),
     new THREE.LineBasicMaterial({ color:0xD95B43, linewidth: 3 }),
@@ -238,6 +253,15 @@ mat_colormap: [
     new THREE.LineBasicMaterial({ color:0xE97F02, linewidth: 3 }),
     new THREE.LineBasicMaterial({ color:0xF8CA00, linewidth: 3 }),
     new THREE.LineBasicMaterial({ color:0x8A9B0F, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x69D2E7, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xA7DBD8, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xE0E4CC, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF38630, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFA6900, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFE4365, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFC9D9A, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF9CDAD, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC8C8A9, linewidth: 3 }),
     
         ],
 

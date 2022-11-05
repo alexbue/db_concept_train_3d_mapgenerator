@@ -1,12 +1,11 @@
 
 import { globals } from '@/components/globals.js';
-import { clamp, geometry_rotate_to_scene } from '@/components/utils/utils.js';
-import { loader_hide } from '@/components/render/init.js';
+import { clamp, geometry_rotate_to_scene, three_create_text } from '@/components/utils/utils.js';
+import { loader_hide } from '@/components/gui/gui.js';
 import { convert_geocoord_to_xy } from '@/components/utils/utils.js';
 
 import * as THREE from 'three';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import DBSANS from './../../../public/DB Sans Bold/DB Sans Bold.ttf';
+
 
 const COUNTRIES = [
 
@@ -123,46 +122,25 @@ export function create_country_names(data) { // "./countries_centroids_mod.geojs
                 let vectors2 = convert_geocoord_to_xy(data.features[i].geometry["coordinates"]);
 
 
-                let mesh = new THREE.Mesh(globals.GEO_POINT, globals.MAT_BASIC_BLACK);
-                mesh.position.x = -vectors2.y;
-                mesh.position.y = 0.1;
-                mesh.position.z = -vectors2.x;
-                
+                // let mesh = new THREE.Mesh(globals.GEO_POINT, globals.MAT_BASIC_BLACK);
+                // mesh.position.x = -vectors2.y;
+                // mesh.position.y = 0.1;
+                // mesh.position.z = -vectors2.x;
 
-                // globals.scene.add(mesh); 
+                // globals.scene.add(mesh);
+                // globals.COUNTRIES_POINT.push(mesh);   
 
-                globals.TTFLOADER.load(DBSANS, (json) => {
-                    // First parse the font.
-                    let dbsans = globals.FONTLOADER.parse(json);
-                    // Use parsed font as normal.
-                    let textGeometry = new TextGeometry(globals.COUNTRIES[c], { height: 0.0001, size: 0.0048, font: dbsans });
-                    let textMesh = new THREE.Mesh(textGeometry, globals.MAT_NAME_OPAQUE);
 
-                    textMesh.position.x = -vectors2.y;
-                    textMesh.position.y = globals.ADAPTIVE_TEXT_HEIGHT_MIN; // HEIGHT
-                    textMesh.position.z = -vectors2.x;
-
-                    textMesh.rotateX(Math.PI / 2);
-                    textMesh.rotateZ(Math.PI);
-                    textMesh.rotateY(Math.PI);
-
-                    globals.COUNTRIES_TEXT_POS.push([textMesh.position.x, textMesh.position.y, textMesh.position.z]);
-                    globals.COUNTRIES_TEXT_ROT.push([textMesh.rotation.x, textMesh.rotation.y, textMesh.rotation.z]);
-
-                    globals.scene.add(textMesh);
-
-                    globals.COUNTRIES_POINT.push(mesh);
-                    globals.COUNTRIES_TEXT.push(textMesh);
-
+                let callback = function(){
                     if (data.features[i].properties["COUNTRY"] == globals.COUNTRIES[globals.COUNTRIES.length-1]){
                         loader_hide();
-                        // console.log(loader_hide);
-                    }
+                    } 
+                }
 
-                });
+                three_create_text(globals.COUNTRIES[c], vectors2, callback)
+              
             }
-        }
-        
+        }    
     }   
 }
 

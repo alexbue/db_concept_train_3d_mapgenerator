@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import * as GEOLIB from "geolib";
 import { globals }from '@/components/globals.js';
-
-
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import DBSANS from './../../../public/DB Sans Bold/DB Sans Bold.ttf';
 
 export function convert_geocoord_to_xy(pos) { // alogorithm for normalizing geojson point coordinates with consideration distortion from map projection 
 
@@ -32,19 +32,27 @@ export function clamp(num, min, max) {
     return Math.min(Math.max(num, min), max); 
 }
 
-
 export function get_angle(a, b) { 
 
-    return -Math.atan2((b.x - a.x), (b.y - a.y)) * 180 / Math.PI; 
+    return -Math.atan2((b.x - a.x), (b.y - a.y)) * 180 / Math.PI; // (b.x - a.x), (b.y - a.y) swapped! 
 }
 
+export function get_quadrant(a, b, sectors=globals.GUI_CONTROLS.station_sectors){
 
-export function get_quadrant(a, b){
+    let sector_angle = 360 / sectors;
     let current = get_angle(a, b);
     if (current < 0) current += 360;
-    return Math.floor(current / 90);
+    return Math.floor(current / sector_angle);
 }
 
+export function rotate_by_quadrant(a, b, sectors=globals.GUI_CONTROLS.station_sectors) {
+
+    let sector_angle = 360 / sectors;
+    let current = get_angle(a, b);
+    let target = sector_angle + (get_quadrant(a, b) * sector_angle);
+    let rotated = b.rotateAround(a, THREE.MathUtils.degToRad(target - current));
+    return rotated;
+}
 
 export function update_distance(p1, p2, distance=globals.GUI_CONTROLS.IN_OUT_DISTANCE) {
 
@@ -54,25 +62,12 @@ export function update_distance(p1, p2, distance=globals.GUI_CONTROLS.IN_OUT_DIS
     return new THREE.Vector3(point.x, p1.y, point.y);
 }
 
-
-export function rotatePointAround(p1, p2, angle=globals.GUI_CONTROLS.IN_OUT_ANGLE) {
-
-    let axis = new THREE.Vector2(p1.x, p1.z);
-    let point = new THREE.Vector2(p2.x, p2.z);
-    let current = get_angle(axis, point);
-    let target = angle + (Math.floor(current / 90) * 90); // unreadable, but elegant conditional switch-statement ;)
-    let r = point.rotateAround(axis, -THREE.MathUtils.degToRad(target - current));
-    return new THREE.Vector3(r.x, p1.y, r.y);
-}
-
-
 export function geometry_rotate_to_scene(geometry){
 
     geometry.rotateX(Math.PI / 2);
     geometry.rotateZ(Math.PI);
     geometry.rotateY(-Math.PI / 2);
 }
-
 
 export function interpolate_vec2(a, b, divisions){  
 
@@ -87,7 +82,34 @@ export function interpolate_vec2(a, b, divisions){
     return arr
 }
 
+export function three_create_text(text, pos_vec2, callback=function(){console.log("");}){
 
-// export function three_create_axis_helper(size){
+    globals.TTFLOADER.load(DBSANS, (json) => {
 
-// };
+        // First parse the font.
+        let dbsans = globals.FONTLOADER.parse(json);
+
+        // Use parsed font as normal.
+        let textGeometry = new TextGeometry(text, { height: 0.0001, size: 0.0048, font: dbsans });
+        let textMesh = new THREE.Mesh(textGeometry, globals.MAT_NAME_OPAQUE);
+    
+        textMesh.position.x = -pos_vec2.y;
+        textMesh.position.y = globals.ADAPTIVE_TEXT_HEIGHT_MIN; // HEIGHT
+        textMesh.position.z = -pos_vec2.x;
+    
+        textMesh.rotateX(Math.PI / 2);
+        textMesh.rotateZ(Math.PI);
+        textMesh.rotateY(Math.PI);
+    
+        globals.COUNTRIES_TEXT_POS.push([textMesh.position.x, textMesh.position.y, textMesh.position.z]);
+        globals.COUNTRIES_TEXT_ROT.push([textMesh.rotation.x, textMesh.rotation.y, textMesh.rotation.z]);
+    
+        globals.scene.add(textMesh);
+        globals.COUNTRIES_TEXT.push(textMesh);
+
+        callback();
+
+        return textMesh;     
+    });
+}
+

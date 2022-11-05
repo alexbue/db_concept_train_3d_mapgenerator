@@ -51,8 +51,8 @@ export default {
             
 
             // 3D OBJECTS
-            MODEL_SECTIONS: [],
-            MODEL_SECTIONS_CONNECTIONS: [],
+            data_mesh_debug_pnts: [],
+            data_mesh_trainlines: [],
 
             // SCENE BASICS
             camera: null,
@@ -251,18 +251,18 @@ export default {
 
             // GUI
             let folder = this.GUI.addFolder("modifier");
-            folder.add(this.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.04).onChange(() => { this.updateRender() });
-            folder.add(this.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange(() => { this.updateRender() });
-            folder.add(this.GUI_CONTROLS, 'IN_OUT_ALIGNMENT_DISTANCE', 0.004, 0.02).onChange(() => { this.updateRender() });
-            folder.add(this.GUI_CONTROLS, 'IN_OUT_ALIGN_ANGLE', 1, 89).onChange(() => { this.updateRender() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.04).onChange(() => { this.update_data() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange(() => { this.update_data() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_ALIGNMENT_DISTANCE', 0.004, 0.02).onChange(() => { this.update_data() });
+            folder.add(this.GUI_CONTROLS, 'IN_OUT_ALIGN_ANGLE', 1, 89).onChange(() => { this.update_data() });
             folder.open();
             let folder2 = this.GUI.addFolder("globals");
-            folder2.add(this.GUI_CONTROLS, 'GLOBAL_MIX', 0, 1).name('GLOBAL MIX').onChange(() => { this.updateRender() });
-            folder2.add(this.GUI_CONTROLS, "GLOBAL_DEBUG_MODE").name("DEBUG MODE").onChange(() => {this.updateRender(); console.log(this.GUI_CONTROLS.GLOBAL_DEBUG_MODE);});
-            folder2.add(this.GUI_RESET, "GUI_RESET").name("RESET MODIFIER").onChange(() => { this.reset_gui(); this.updateRender() });            
+            folder2.add(this.GUI_CONTROLS, 'GLOBAL_MIX', 0, 1).name('GLOBAL MIX').onChange(() => { this.update_data() });
+            folder2.add(this.GUI_CONTROLS, "GLOBAL_DEBUG_MODE").name("DEBUG MODE").onChange(() => {this.update_data(); console.log(this.GUI_CONTROLS.GLOBAL_DEBUG_MODE);});
+            folder2.add(this.GUI_RESET, "GUI_RESET").name("RESET MODIFIER").onChange(() => { this.reset_gui(); this.update_data() });            
             folder2.open();
             let folder3 = this.GUI.addFolder("camera");
-            folder3.add(this.GUI_RESET_CAMERA, "GUI_RESET").name("RESET CAMERA").onChange(() => { this.reset_camera(); this.updateRender() });
+            folder3.add(this.GUI_RESET_CAMERA, "GUI_RESET").name("RESET CAMERA").onChange(() => { this.reset_camera(); this.update_data() });
             folder3.open();
 
             this.FONTLOADER = new FontLoader();
@@ -517,7 +517,7 @@ export default {
             // subdivide
             this.subdivide();
             // initial render
-            this.updateRender();
+            this.update_data();
         },
 
         get_station_quadrants: function(){
@@ -657,7 +657,7 @@ export default {
         },
 
 
-        updateRender: function () {
+        update_data: function () {
 
             // console.log(this.DATA_MOD);
 
@@ -816,16 +816,16 @@ export default {
 
         clear_3d_scene: function () {
             // remove + dispose
-            for (let m = 0; m < this.MODEL_SECTIONS.length; m++) {
-                this.MODEL_SECTIONS[m].geometry.dispose();
-                this.MODEL_SECTIONS[m].material.dispose();
-                this.scene.remove(this.MODEL_SECTIONS[m]);
+            for (let m = 0; m < this.data_mesh_debug_pnts.length; m++) {
+                this.data_mesh_debug_pnts[m].geometry.dispose();
+                this.data_mesh_debug_pnts[m].material.dispose();
+                this.scene.remove(this.data_mesh_debug_pnts[m]);
             }
-            for (let m = 0; m < this.MODEL_SECTIONS_CONNECTIONS.length; m++) {
-                for (let n = 0; n < this.MODEL_SECTIONS_CONNECTIONS[m].length; n++) {
-                    this.MODEL_SECTIONS_CONNECTIONS[m][n].geometry.dispose();
-                    this.MODEL_SECTIONS_CONNECTIONS[m][n].material.dispose();
-                    this.scene.remove(this.MODEL_SECTIONS_CONNECTIONS[m][n]);
+            for (let m = 0; m < this.data_mesh_trainlines.length; m++) {
+                for (let n = 0; n < this.data_mesh_trainlines[m].length; n++) {
+                    this.data_mesh_trainlines[m][n].geometry.dispose();
+                    this.data_mesh_trainlines[m][n].material.dispose();
+                    this.scene.remove(this.data_mesh_trainlines[m][n]);
                 }
             }
             this.renderer.renderLists.dispose();
@@ -834,15 +834,15 @@ export default {
         update_3d_scene: function () {
 
             // trainline sections
-            for (let m = 0; m < this.MODEL_SECTIONS.length; m++) {
-                this.scene.add(this.MODEL_SECTIONS[m]);
+            for (let m = 0; m < this.data_mesh_debug_pnts.length; m++) {
+                this.scene.add(this.data_mesh_debug_pnts[m]);
             }
 
             if (this.GUI_CONTROLS.GLOBAL_DEBUG_MODE){
             // section points
-            for (let m = 0; m < this.MODEL_SECTIONS_CONNECTIONS.length; m++) {
-                for (let n = 0; n < this.MODEL_SECTIONS_CONNECTIONS[m].length; n++) {
-                    this.scene.add(this.MODEL_SECTIONS_CONNECTIONS[m][n]);
+            for (let m = 0; m < this.data_mesh_trainlines.length; m++) {
+                for (let n = 0; n < this.data_mesh_trainlines[m].length; n++) {
+                    this.scene.add(this.data_mesh_trainlines[m][n]);
                 }
             }
 
@@ -870,8 +870,8 @@ export default {
                 }
             }
 
-            this.MODEL_SECTIONS = models_sections;
-            this.MODEL_SECTIONS_CONNECTIONS = models_connections;
+            this.data_mesh_debug_pnts = models_sections;
+            this.data_mesh_trainlines = models_connections;
         },
 
         createPoint: function (pos_vec3, color_index) {

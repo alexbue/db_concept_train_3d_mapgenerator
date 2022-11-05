@@ -4,18 +4,62 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import DBSANS from './../../../public/DB Sans Bold/DB Sans Bold.ttf';
 
 
-export function render_data(data) {
+const scene = globals.scene;
 
-    let models = create_trainnet(data);
+export function update_render() {
 
-    globals.MODEL_SECTIONS = models[0];
-    globals.MODEL_SECTIONS_CONNECTIONS = models[1];
+    let mesh_trainlines = [];
+    let mesh_debug_pnts = [];
+
+    let data = globals.data_tl_trainnet_view;
+
+    dispose();   
+
+    [mesh_trainlines, mesh_debug_pnts] = create_meshes(data);
+
+    globals.data_mesh_trainlines = mesh_trainlines;
+    globals.data_mesh_debug_pnts = mesh_debug_pnts;
+
+    render();
 }
 
 
-const scene = globals.scene;
+function render(){
 
-function create_trainnet(vertices) {
+    const a = globals.data_mesh_trainlines;
+    const b = globals.data_mesh_debug_pnts;
+
+    if(a.length != 0) for (let m in a) scene.add(a[m]);
+    if(b.length != 0) for (let m in b) scene.add(b[m]);
+}
+
+
+function dispose(){
+
+    const a = globals.data_mesh_trainlines;
+    const b = globals.data_mesh_debug_pnts;
+
+    if(a.length != 0) {
+        for (let m in a) {
+            a[m].geometry.dispose();
+            a[m].material.dispose();
+            scene.remove(a[m]);
+            }
+        }
+
+    if(b.length != 0) {
+        for ( let m in b ) {
+            b[m].geometry.dispose();
+            b[m].material.dispose();
+            scene.remove(b[m]);
+            }
+        }
+
+    globals.renderer.renderLists.dispose();
+}
+
+
+function create_meshes(vertices) {
 
     let connections = [];
     let sections = [];
@@ -25,21 +69,19 @@ function create_trainnet(vertices) {
         for (let sec = 0; sec < vertices[tl].length; sec++) { // [station a -> station b] as array: [a, p, p, , ... , b]]
 
             let line_section = create_tl_line(vertices[tl][sec], tl);
-            scene.add(line_section);
+            // scene.add(line_section);
             sections.push(line_section);
 
             for (let vert = 0; vert < vertices[tl][sec].length; vert++) {
 
                 let con = create_debug_point(vertices[tl][sec][vert], tl);
-                scene.add(con);
+                // scene.add(con);
                 connections.push(con);
             }
         }
     }
     return [sections, connections];
-
 }
-
 
 
 const y_height_default = globals.y_height_default;
@@ -68,7 +110,43 @@ function create_tl_line(vertices, col_idx) {
 
 
 
-export function render_stations(data) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export function render_stations() {
+
+    let data = globals.data_tl_stations;
     for (let station in data) create_station_mesh( data[station].vec2, data[station].city );
 }
 

@@ -1,4 +1,5 @@
-import { convert_geocoord_to_xy, get_quadrant } from '@/components/utils/utils.js';
+import { convert_geocoord_to_xy } from '@/components/utils/utils.js';
+import { globals } from '../globals';
 
 
 export function unpack_data(cities, trainlines) {   
@@ -9,7 +10,6 @@ export function unpack_data(cities, trainlines) {
     for (let line = 0; line < trainlines.length; line++) {
 
         let section_vec2 = [];
-        let stations = [];
 
         for (let section = 0; section < trainlines[line].length; section++) {
 
@@ -23,58 +23,30 @@ export function unpack_data(cities, trainlines) {
                     section_vec2.push(vec2);   
 
                     create_station_data(trainlines_stations, station, cities, vec2);
-                    stations.push([cities[station]["city"], vec2]);                   
                 }
             }
         }
-        compute_station_quadrants(stations, trainlines_stations)
         trainlines_vectors2.push(section_vec2);
     }
+
+    globals.data_tl_trainnet = trainlines_vectors2;
+    globals.data_tl_stations = trainlines_stations;
+
     return [ trainlines_vectors2, trainlines_stations ];
 }
 
-
-function create_station_data(occ, station, data, vec2){
+function create_station_data(occ, station, data, vec2, sectors=globals.GUI_CONTROLS.station_sectors){
 
     occ[data[station]["city"]] = {};
     occ[data[station]["city"]].city = data[station]["city"];
     occ[data[station]["city"]].lng =  data[station]["lng"];
     occ[data[station]["city"]].lat =  data[station]["lat"];
     occ[data[station]["city"]].vec2 = vec2;
-    occ[data[station]["city"]].quadrants = [0, 0, 0, 0];
-    occ[data[station]["city"]].q_current = [0, 0, 0, 0];
+    occ[data[station]["city"]].quadrants = new Array(sectors).fill(0);
+    occ[data[station]["city"]].q_current = new Array(sectors).fill(0);
 }
 
 
-function compute_station_quadrants(stations, occ){
-
-    for(let s = 0; s < stations.length; s++){
-
-        let station = occ[stations[s][0]];
-        let station_vert = stations[s][1];
-
-        if (s == 0) { // check outgoing connection
-
-            set_quadrants(station_vert, stations[s+1][1], station);        
-        }
-        else if (s == stations.length-1) { // check incoming connection
-
-            set_quadrants(station_vert, stations[s-1][1], station);
-        } 
-        else { //  check in+out connection
-
-            set_quadrants(station_vert, stations[s+1][1], station);  
-            set_quadrants(station_vert, stations[s-1][1], station);
-        }
-    }  
-}
-
-
-function set_quadrants(a, b, station){
-
-    station.quadrants[get_quadrant(a, b)] +=1;
-    station.q_current = station.quadrants;
-}
 
 
 
@@ -194,7 +166,7 @@ function set_quadrants(a, b, station){
                 // subdivide
                 subdivide();
                 // initial render
-                this.updateRender();
+                this.update_data();
             },
     
             
