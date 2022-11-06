@@ -15,9 +15,10 @@ export const globals = {
     // new 
 
     
-    update_data: null,
+    update: null, // global app (vue) update - declared in main.vue at init 
 
     data_tl_trainnet: null,
+    data_tl_trainnet_build: null,
     data_tl_trainnet_view: null,
     data_tl_stations: {},   
    
@@ -32,7 +33,7 @@ export const globals = {
 
     mat_map_1:  new THREE.MeshBasicMaterial({ color: 0xF8F8F8}), // white or black
     mat_map_2: new THREE.MeshBasicMaterial({ color: 0xCCFF0CC}), // green
-    mat_map_edges: new THREE.LineBasicMaterial({ color: new THREE.Color(0x97B49C) }), // dark green 
+    mat_map_edges: new THREE.LineBasicMaterial({ color: 0x97B49C }), // dark green 
 
     geo_station_sphere: new THREE.SphereGeometry(0.002, 8, 4),
 
@@ -48,7 +49,8 @@ export const globals = {
     GUI_CONTROLS: new function () {
 
         // station modifier
-        this.station_sectors = 16;
+        this.station_sectors = 8;
+        this.station_sector_offset = 0;
 
         // globals
         this.GLOBAL_MIX = 1;

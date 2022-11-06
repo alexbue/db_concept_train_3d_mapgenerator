@@ -13,7 +13,7 @@ import { init_scene} from '@/components/render/init.js';
 import { create_map, create_country_names, animate_map } from '@/components/map/map.js';
 
 import { unpack_data } from '@/components/trainnet/data.js';
-import { init_data, build_data } from '@/components/trainnet/processing.js';
+import { init_data, build_data, update_view_data } from '@/components/trainnet/processing.js';
 import { update_render, render_stations } from '@/components/trainnet/render.js';
 
 
@@ -108,8 +108,9 @@ export default {
         build: function () {
 
             init_data(); 
-
             build_data()
+            update_view_data();
+
             update_render();
 
             render_stations();
@@ -122,12 +123,13 @@ export default {
 
             if (rebuild) {
 
-                build_data();   
+                build_data();  
+        
+            }  
 
-            }         
-            
+            update_view_data(); 
             update_render();
-            renderer_info_log();
+            // renderer_info_log();
           
             
 

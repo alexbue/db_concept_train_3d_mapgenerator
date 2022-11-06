@@ -2,7 +2,7 @@
 
 // import * as THREE from 'three';
 // import { globals }from '@/components/globals.js';
-import { interpolate_vec2, get_quadrant, rotate_by_quadrant }from '@/components/utils/utils.js';
+import { interpolate_vec2, get_quadrant, rotate_by_quadrant, weighted_average }from '@/components/utils/utils.js';
 import { globals } from '../globals';
 
 const data_tl_trainnet = globals.data_tl_trainnet;
@@ -16,16 +16,37 @@ export function init_data(){
 
 export function build_data(){
 
-    globals.data_tl_trainnet_view = clone_view(globals.data_tl_trainnet);
-    unpack_sections(globals.data_tl_trainnet_view, globals.data_tl_stations, set_station_sector_rails);
+    globals.data_tl_trainnet_build = clone_view(globals.data_tl_trainnet);
+    unpack_sections(globals.data_tl_trainnet_build, globals.data_tl_stations, set_station_sector_rails);  
 }
 
 export function process_data(){
 
 }
 
+export function update_view_data(){
 
-export function subdivide_data(data, divisions){    
+    let t = globals.GUI_CONTROLS.GLOBAL_MIX; // t for weighted average between two vectors 
+
+    let data = globals.data_tl_trainnet;   
+    let data_build = globals.data_tl_trainnet_build; 
+    let _data = structuredClone(data);
+
+    for (let tl = 0; tl < data.length; tl++) {
+        for (let sec = 0; sec < data[tl].length; sec++) {
+            for (let vec = 0; vec < data[tl][sec].length; vec++) {
+               
+                _data[tl][sec][vec] = weighted_average(data[tl][sec][vec], data_build[tl][sec][vec], t);
+            }
+        }
+    }
+    globals.data_tl_trainnet_view = _data;
+}
+
+
+
+
+function subdivide_data(data, divisions){    
     let _data = [];
     for (let tl = 0; tl < data.length; tl++) {
         let _updates = [];
@@ -40,7 +61,6 @@ export function subdivide_data(data, divisions){
 
 function clone_view(data){
 
-    console.log("clone - time: for x in ... ");
     let _data = [];
     for (let tl = 0; tl < data.length; tl++) { 
         let _trainline = [];

@@ -1,17 +1,27 @@
+/* eslint-disable */
+
+
 import * as THREE from 'three';
 import { globals } from '@/components/globals.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import DBSANS from './../../../public/DB Sans Bold/DB Sans Bold.ttf';
-
+import { SphereGeometry } from 'three';
+import * as BufferGeometryUtils from '@/components/render/BufferGeometryUtils';
 
 const scene = globals.scene;
 
+export function show_hide(objects){
+    for(let o = 0; o < objects.length; o++){
+        objects[o].visible = globals.GUI_CONTROLS.GLOBAL_DEBUG_MODE;
+    }
+}
+
 export function update_render() {
+
+    let data = globals.data_tl_trainnet_view;
 
     let mesh_trainlines = [];
     let mesh_debug_pnts = [];
-
-    let data = globals.data_tl_trainnet_view;
 
     dispose();   
 
@@ -26,11 +36,13 @@ export function update_render() {
 
 function render(){
 
+    let debug_mode = globals.GUI_CONTROLS.GLOBAL_DEBUG_MODE;
+
     const a = globals.data_mesh_trainlines;
     const b = globals.data_mesh_debug_pnts;
 
     if(a.length != 0) for (let m in a) scene.add(a[m]);
-    if(b.length != 0) for (let m in b) scene.add(b[m]);
+    if(b.length != 0 && debug_mode ) for (let m in b) scene.add(b[m]);
 }
 
 
@@ -59,23 +71,23 @@ function dispose(){
 }
 
 
-function create_meshes(vertices) {
+// single draw calls 
+
+function create_meshes(data) {
 
     let connections = [];
     let sections = [];
 
-    for (let tl = 0; tl < vertices.length; tl++) { // trainline
+    for (let tl = 0; tl < data.length; tl++) { // trainline
 
-        for (let sec = 0; sec < vertices[tl].length; sec++) { // [station a -> station b] as array: [a, p, p, , ... , b]]
+        for (let sec = 0; sec < data[tl].length; sec++) { // [station a -> station b] as array: [a, p, p, , ... , b]]
 
-            let line_section = create_tl_line(vertices[tl][sec], tl);
-            // scene.add(line_section);
+            let line_section = create_tl_line(data[tl][sec], tl);
             sections.push(line_section);
 
-            for (let vert = 0; vert < vertices[tl][sec].length; vert++) {
-
-                let con = create_debug_point(vertices[tl][sec][vert], tl);
-                // scene.add(con);
+            for (let vert = 0; vert < data[tl][sec].length; vert++) {
+                
+                let con = create_debug_point(data[tl][sec][vert], tl);
                 connections.push(con);
             }
         }
@@ -107,9 +119,6 @@ function create_tl_line(vertices, col_idx) {
     }
     return new THREE.Line(new THREE.BufferGeometry().setFromPoints(vertices_3), mat_colormap[col_idx]);
 }
-
-
-
 
 
 

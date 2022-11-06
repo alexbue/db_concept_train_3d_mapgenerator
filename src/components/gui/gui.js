@@ -2,6 +2,7 @@
 // import Stats from 'three/examples/jsm/libs/stats.module';
 import * as dat from 'dat.gui';
 import { globals } from '@/components/globals.js';
+import { show_hide } from '@/components/trainnet/render.js';
 
 
 export function init_gui() {
@@ -35,10 +36,15 @@ export function init_gui() {
     folder.add(globals.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange(() => { globals.update() });
     folder.add(globals.GUI_CONTROLS, 'IN_OUT_ALIGNMENT_DISTANCE', 0.004, 0.02).onChange(() => { globals.update() });
     folder.add(globals.GUI_CONTROLS, 'IN_OUT_ALIGN_ANGLE', 1, 89).onChange(() => { globals.update() });
-    folder.open();
+    // folder.open();
 
     let folder2 = globals.GUI.addFolder("station modifier");
     folder2.add(globals.GUI_CONTROLS, 'station_sectors', 1, 32).name('STATION SECTORS').onChange(() => { globals.update(true);  });
+
+    folder2.add(globals.GUI_CONTROLS, 'station_sector_offset', 0, 1, 0.001).name('SECTOR OFFSET').onChange(() => { 
+        globals.update(true);  
+      });
+
     folder2.add(globals.GUI_INFO_RENDERER, "INFO_RENDERER").name("RENDERER INFO").onChange(() => {  renderer_info_log() });
     folder2.open();
 
@@ -49,7 +55,12 @@ export function init_gui() {
     let folder4 = globals.GUI.addFolder("debug");
     folder4.add(globals.GUI_CONTROLS, "GLOBAL_GRID_MODE").name("SHOW GRID").onChange(() => {  globals.GRIDHELPER.visible = globals.GUI_CONTROLS.GLOBAL_GRID_MODE; });
     folder4.add(globals.GUI_CONTROLS, "GLOBAL_AXIS_MODE").name("SHOW AXIS").onChange(() => {  globals.axes_helper.visible = globals.GUI_CONTROLS.GLOBAL_AXIS_MODE; });
-    folder4.add(globals.GUI_CONTROLS, "GLOBAL_DEBUG_MODE").name("DEBUG MODE").onChange(() => { globals.update(); console.log(globals.GUI_CONTROLS.GLOBAL_DEBUG_MODE); });
+    folder4.add(globals.GUI_CONTROLS, "GLOBAL_DEBUG_MODE").name("DEBUG MODE").onChange(() => { 
+
+        globals.update(); 
+        show_hide(globals.data_mesh_debug_pnts);
+        });
+
     folder4.add(globals.GUI_RESET, "GUI_RESET").name("RESET MODIFIER").onChange(() => { reset_gui(); globals.update() });
     folder4.open();
 

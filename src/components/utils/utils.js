@@ -46,10 +46,10 @@ export function get_quadrant(a, b, sectors=globals.GUI_CONTROLS.station_sectors)
 }
 
 export function rotate_by_quadrant(a, b, sectors=globals.GUI_CONTROLS.station_sectors) {
-
     let sector_angle = 360 / sectors;
+    let offset = sector_angle * globals.GUI_CONTROLS.station_sector_offset;
     let current = get_angle(a, b);
-    let target = sector_angle + (get_quadrant(a, b) * sector_angle);
+    let target = sector_angle + (get_quadrant(a, b) * sector_angle) - offset;
     let rotated = b.rotateAround(a, THREE.MathUtils.degToRad(target - current));
     return rotated;
 }
@@ -80,6 +80,14 @@ export function interpolate_vec2(a, b, divisions){
     }
     arr.push(b);
     return arr
+}
+
+export function weighted_average(b, a, t){
+
+    let _x = (a.x * t) + (b.x * (1 - t));
+    let _y = (a.y * t) + (b.y * (1 - t));
+
+    return new THREE.Vector2(_x, _y);
 }
 
 export function three_create_text(text, pos_vec2, callback=function(){console.log("");}){
