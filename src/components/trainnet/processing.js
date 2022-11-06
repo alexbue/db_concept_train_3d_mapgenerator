@@ -2,7 +2,7 @@
 
 // import * as THREE from 'three';
 // import { globals }from '@/components/globals.js';
-import { interpolate_vec2, get_quadrant, rotate_by_quadrant, weighted_average }from '@/components/utils/utils.js';
+import { interpolate_vec2, get_quadrant, rotate_by_quadrant, weighted_average, shift_vector_by_offset }from '@/components/utils/utils.js';
 import { globals } from '../globals';
 
 const data_tl_trainnet = globals.data_tl_trainnet;
@@ -16,57 +16,61 @@ export function init_data(){
 
 export function build_data(){
 
-    globals.data_tl_trainnet_build = clone_view(globals.data_tl_trainnet);
-    unpack_sections(globals.data_tl_trainnet_build, globals.data_tl_stations, set_station_sector_rails);  
+    globals.data_tl_trainnet_build = clone_data(globals.data_tl_trainnet);
+    unpack_sections_with_stations(globals.data_tl_trainnet_build, globals.data_tl_stations, set_station_sector_rails);  
 }
 
 export function process_data(){
 
+    let data = globals.data_tl_trainnet_build;  
+    let _data = clone_data(data);
+
+    _data = process_sections(data, _data, shift_sections);  
+
+    globals.data_tl_trainnet_process = _data;
+    update_view_data();
 }
 
-export function update_view_data(){
+function update_view_data(){
 
-    let t = globals.GUI_CONTROLS.GLOBAL_MIX; // t for weighted average between two vectors 
+    if (globals.GUI_CONTROLS.GLOBAL_MIX == 1) {
 
-    let data = globals.data_tl_trainnet;   
-    let data_build = globals.data_tl_trainnet_build; 
-    let _data = structuredClone(data);
+        globals.data_tl_trainnet_view = globals.data_tl_trainnet_process;
+    }
+    else {
+        
+        let t = globals.GUI_CONTROLS.GLOBAL_MIX; // t for weighted average between two vectors 
 
-    for (let tl = 0; tl < data.length; tl++) {
-        for (let sec = 0; sec < data[tl].length; sec++) {
-            for (let vec = 0; vec < data[tl][sec].length; vec++) {
-               
-                _data[tl][sec][vec] = weighted_average(data[tl][sec][vec], data_build[tl][sec][vec], t);
+        let data_a = globals.data_tl_trainnet;   
+        let data_b = globals.data_tl_trainnet_process; 
+
+        let _data = clone_data(data_a);
+
+        for (let tl = 0; tl < _data.length; tl++) {
+            for (let sec = 0; sec < _data[tl].length; sec++) {
+                for (let vec = 0; vec < _data[tl][sec].length; vec++) {                        
+                    _data[tl][sec][vec] = weighted_average(data_a[tl][sec][vec], data_b[tl][sec][vec], t);
+                }
             }
         }
+        globals.data_tl_trainnet_view = _data;
     }
-    globals.data_tl_trainnet_view = _data;
 }
 
-
-
-
-function subdivide_data(data, divisions){    
-    let _data = [];
-    for (let tl = 0; tl < data.length; tl++) {
-        let _updates = [];
-        for (let sec = 0; sec < data[tl].length-1; sec++) { 
-            // division +2 as we want to keep end and start vector always fixed (non-modified) in future
-            _updates.push(interpolate_vec2(data[tl][sec], data[tl][sec + 1], divisions+2));  
-        }
-        _data.push(_updates);
-    }
-    return _data;
-}
-
-function clone_view(data){
+function clone_data(data){ // 5x faster than structuredClone() :)
 
     let _data = [];
+
     for (let tl = 0; tl < data.length; tl++) { 
+
         let _trainline = [];
+
         for (let sec = 0; sec < data[tl].length; sec++) {
+
             let _section = [];
+
             for (let vertex = 0; vertex < data[tl][sec].length; vertex++) {
+
                 _section.push(data[tl][sec][vertex].clone());
             }
             _trainline.push(_section);
@@ -76,14 +80,62 @@ function clone_view(data){
     return _data;
 }
 
-function unpack_sections(data, stations, func){
+
+// unpack vertices from data arrays 
+
+function process_sections(data, _data, func){
 
     for (let tl = 0; tl < data.length; tl++) {
+
+        for (let sec = 0; sec < data[tl].length; sec++) {
+
+            func(data, _data, tl, sec);
+        }
+    }
+    return _data;
+}
+
+function unpack_sections_with_stations(data, stations, func){
+
+    for (let tl = 0; tl < data.length; tl++) {
+
         for (let section = 0; section < data[tl].length; section++) {
+
             func(data[tl][section], section, stations, tl);
         }
     }
 }
+
+
+// process vertices
+
+function subdivide_data(data, divisions){    
+
+    let _data = [];
+
+    for (let tl = 0; tl < data.length; tl++) {
+
+        let _updates = [];
+
+        for (let sec = 0; sec < data[tl].length-1; sec++) { 
+
+            // division +2 as we want to keep end and start vector always fixed (non-modified) in future
+            _updates.push(interpolate_vec2(data[tl][sec], data[tl][sec + 1], divisions+2));  
+        }
+        _data.push(_updates);
+    }
+    return _data;
+}
+
+
+function shift_sections(data, _data, tl, sec){
+
+    for (let vert = 1; vert < data[tl][sec].length-1; vert++ ){
+
+        _data[tl][sec][vert] = shift_vector_by_offset(data[tl][sec][vert]);
+    }
+}
+
 
 function set_station_sector_rails(section, section_id, stations, traintl_idx){
 
@@ -95,6 +147,7 @@ function set_station_sector_rails(section, section_id, stations, traintl_idx){
             let pt = section[1];
 
             pt = rotate_by_quadrant(ax, pt);
+            section[2] = pt.clone();
         }
         else if (stations[s].vec2.equals(section[section.length-1])){ // get station name by vector-coordinates 
 
@@ -102,6 +155,7 @@ function set_station_sector_rails(section, section_id, stations, traintl_idx){
             let pt = section[section.length-2];
 
             pt = rotate_by_quadrant(ax, pt);
+            section[section.length-3] = pt.clone();
         }
     }
  }

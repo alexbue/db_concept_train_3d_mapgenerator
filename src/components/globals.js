@@ -19,6 +19,7 @@ export const globals = {
 
     data_tl_trainnet: null,
     data_tl_trainnet_build: null,
+    data_tl_trainnet_process: null,
     data_tl_trainnet_view: null,
     data_tl_stations: {},   
    
@@ -48,7 +49,7 @@ export const globals = {
     // GUI CONTROLS:
     GUI_CONTROLS: new function () {
 
-        // station modifier
+        // station build modifier
         this.station_sectors = 8;
         this.station_sector_offset = 0;
 
@@ -60,6 +61,10 @@ export const globals = {
         this.GLOBAL_GRID_MODE = true;
         this.GLOBAL_AXIS_MODE = true;
 
+        // processing
+        this.section_offset = 0.000;
+
+        // old 
         this.IN_OUT_DISTANCE = 0.03;
         this.IN_OUT_ANGLE = 45;
         this.IN_OUT_ALIGNMENT_DISTANCE = 0.004;
@@ -117,23 +122,13 @@ export const globals = {
         ["München", "Stuttgart", "Leipzig"],
         ["München", "Leipzig"],
         ["München", "Nürnberg", "Leipzig", "Berlin", "Hamburg"],
-        ["München", "Stuttgart", "Frankfurt", "Leipzig"],
-        ["München", "Nürnberg", "Frankfurt"],
-        ["München", "Stuttgart", "Frankfurt"],
-        ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
-        ["München", "Nürnberg", "Frankfurt", "Hamburg"],
-        ["München", "Stuttgart", "Frankfurt", "Hamburg"],
-        ["München", "Leipzig", "Hamburg"],
-        ["München", "Stuttgart", "Leipzig"],
-        ["München", "Leipzig"],
-        ["München", "Nürnberg", "Leipzig", "Berlin", "Hamburg"],
-        ["München", "Stuttgart", "Frankfurt", "Leipzig"],
-        ["München", "Nürnberg", "Frankfurt"],
-        ["München", "Stuttgart", "Frankfurt"],
-        ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
-        ["München", "Nürnberg", "Frankfurt", "Hamburg"],
-        ["München", "Stuttgart", "Frankfurt", "Hamburg"],
-        ["München", "Leipzig", "Hamburg"],
+        // ["München", "Stuttgart", "Frankfurt", "Leipzig"],
+        // ["München", "Nürnberg", "Frankfurt"],
+        // ["München", "Stuttgart", "Frankfurt"],
+        // ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
+        // ["München", "Nürnberg", "Frankfurt", "Hamburg"],
+        // ["München", "Stuttgart", "Frankfurt", "Hamburg"],
+        // ["München", "Leipzig", "Hamburg"],
     ],
 
 
@@ -230,6 +225,74 @@ export const globals = {
 
 mat_colormap: [
 
+    new THREE.LineBasicMaterial({ color:0x83AF9B, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xECD078, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xD95B43, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC02942, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x542437, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x53777A, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x556270, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x4ECDC4, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC7F464, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFF6B6B, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC44D58, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x774F38, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xE08E79, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF1D4AF, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xECE5CE, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC5E0DC, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xE8DDCB, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xCDB380, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x036564, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x033649, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x490A3D, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xBD1550, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xE97F02, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF8CA00, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x8A9B0F, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x69D2E7, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xA7DBD8, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xE0E4CC, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF38630, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFA6900, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFE4365, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFC9D9A, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF9CDAD, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC8C8A9, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x83AF9B, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xECD078, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xD95B43, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC02942, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x542437, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x53777A, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x556270, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x4ECDC4, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC7F464, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFF6B6B, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC44D58, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x774F38, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xE08E79, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF1D4AF, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xECE5CE, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC5E0DC, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xE8DDCB, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xCDB380, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x036564, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x033649, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x490A3D, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xBD1550, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xE97F02, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF8CA00, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x8A9B0F, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0x69D2E7, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xA7DBD8, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xE0E4CC, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF38630, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFA6900, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFE4365, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xFC9D9A, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xF9CDAD, linewidth: 3 }),
+    new THREE.LineBasicMaterial({ color:0xC8C8A9, linewidth: 3 }),
     new THREE.LineBasicMaterial({ color:0x83AF9B, linewidth: 3 }),
     new THREE.LineBasicMaterial({ color:0xECD078, linewidth: 3 }),
     new THREE.LineBasicMaterial({ color:0xD95B43, linewidth: 3 }),

@@ -31,17 +31,18 @@ export function init_gui() {
 
     // GUI
     let folder = globals.GUI.addFolder("modifier");
+    folder.add(globals.GUI_CONTROLS, 'section_offset', -0.01, 0.01, 0.001).onChange(() => { globals.update() });
 
-    folder.add(globals.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.04).onChange(() => { globals.update() });
-    folder.add(globals.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange(() => { globals.update() });
-    folder.add(globals.GUI_CONTROLS, 'IN_OUT_ALIGNMENT_DISTANCE', 0.004, 0.02).onChange(() => { globals.update() });
-    folder.add(globals.GUI_CONTROLS, 'IN_OUT_ALIGN_ANGLE', 1, 89).onChange(() => { globals.update() });
-    // folder.open();
+    // folder.add(globals.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.04).onChange(() => { globals.update() });
+    // folder.add(globals.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange(() => { globals.update() });
+    // folder.add(globals.GUI_CONTROLS, 'IN_OUT_ALIGNMENT_DISTANCE', 0.004, 0.02).onChange(() => { globals.update() });
+    // folder.add(globals.GUI_CONTROLS, 'IN_OUT_ALIGN_ANGLE', 1, 89).onChange(() => { globals.update() });
+    folder.open();
 
     let folder2 = globals.GUI.addFolder("station modifier");
     folder2.add(globals.GUI_CONTROLS, 'station_sectors', 1, 32, 1).name('STATION SECTORS').onChange(() => { globals.update(true);  });
 
-    folder2.add(globals.GUI_CONTROLS, 'station_sector_offset', 0, 1, 0.001).name('SECTOR OFFSET').onChange(() => { 
+    folder2.add(globals.GUI_CONTROLS, 'station_sector_offset', 0, 1, 0.01).name('SECTOR OFFSET').onChange(() => { 
         globals.update(true);  
       });
 

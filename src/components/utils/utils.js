@@ -54,6 +54,12 @@ export function rotate_by_quadrant(a, b, sectors=globals.GUI_CONTROLS.station_se
     return rotated;
 }
 
+
+export function shift_vector_by_offset(a){   
+    
+    return a.clone().add(new THREE.Vector2(globals.GUI_CONTROLS.section_offset));
+}
+
 export function update_distance(p1, p2, distance=globals.GUI_CONTROLS.IN_OUT_DISTANCE) {
 
     let station = new THREE.Vector2(p1.x, p1.z);
