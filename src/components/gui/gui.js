@@ -39,7 +39,7 @@ export function init_gui() {
     // folder.open();
 
     let folder2 = globals.GUI.addFolder("station modifier");
-    folder2.add(globals.GUI_CONTROLS, 'station_sectors', 1, 32).name('STATION SECTORS').onChange(() => { globals.update(true);  });
+    folder2.add(globals.GUI_CONTROLS, 'station_sectors', 1, 32, 1).name('STATION SECTORS').onChange(() => { globals.update(true);  });
 
     folder2.add(globals.GUI_CONTROLS, 'station_sector_offset', 0, 1, 0.001).name('SECTOR OFFSET').onChange(() => { 
         globals.update(true);  
