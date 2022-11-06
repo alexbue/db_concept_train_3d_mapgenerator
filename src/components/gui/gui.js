@@ -54,9 +54,9 @@ export function init_gui() {
     folder3.open();
 
     let folder4 = globals.GUI.addFolder("debug");
-    folder4.add(globals.GUI_CONTROLS, "GLOBAL_GRID_MODE").name("SHOW GRID").onChange(() => {  globals.GRIDHELPER.visible = globals.GUI_CONTROLS.GLOBAL_GRID_MODE; });
-    folder4.add(globals.GUI_CONTROLS, "GLOBAL_AXIS_MODE").name("SHOW AXIS").onChange(() => {  globals.axes_helper.visible = globals.GUI_CONTROLS.GLOBAL_AXIS_MODE; });
-    folder4.add(globals.GUI_CONTROLS, "GLOBAL_DEBUG_MODE").name("DEBUG MODE").onChange(() => { 
+    folder4.add(globals.GUI_CONTROLS, "GLOBAL_GRID_ON").name("SHOW GRID").onChange(() => {  globals.GRIDHELPER.visible = globals.GUI_CONTROLS.GLOBAL_GRID_ON; });
+    folder4.add(globals.GUI_CONTROLS, "GLOBAL_AXIS_ON").name("SHOW AXIS").onChange(() => {  globals.axes_helper.visible = globals.GUI_CONTROLS.GLOBAL_AXIS_ON; });
+    folder4.add(globals.GUI_CONTROLS, "GLOBAL_DEBUG_ON").name("DEBUG MODE").onChange(() => { 
 
         globals.update(); 
         show_hide(globals.data_mesh_debug_pnts);

@@ -26,6 +26,7 @@ export function process_data(){
     let _data = clone_data(data);
 
     _data = process_sections(data, _data, shift_sections);  
+    _data = process_sections(_data, _data, straighten_sections);  
 
     globals.data_tl_trainnet_process = _data;
     update_view_data();
@@ -47,8 +48,11 @@ function update_view_data(){
         let _data = clone_data(data_a);
 
         for (let tl = 0; tl < _data.length; tl++) {
+
             for (let sec = 0; sec < _data[tl].length; sec++) {
-                for (let vec = 0; vec < _data[tl][sec].length; vec++) {                        
+
+                for (let vec = 0; vec < _data[tl][sec].length; vec++) {     
+
                     _data[tl][sec][vec] = weighted_average(data_a[tl][sec][vec], data_b[tl][sec][vec], t);
                 }
             }
@@ -128,11 +132,23 @@ function subdivide_data(data, divisions){
 }
 
 
-function shift_sections(data, _data, tl, sec){
+function shift_sections(data, _data, tl, sec){ // set offset for middle section 
 
-    for (let vert = 1; vert < data[tl][sec].length-1; vert++ ){
+    for (let vert = 2; vert < data[tl][sec].length-2; vert++ ){
 
-        _data[tl][sec][vert] = shift_vector_by_offset(data[tl][sec][vert]);
+        _data[tl][sec][vert] = shift_vector_by_offset(data[tl][sec][vert]); 
+    }
+}
+
+function straighten_sections(data, _data, tl, sec){   // straighten middle section 
+
+    let mid_sec_len = data[tl][sec].length - 4; 
+    let divisions = mid_sec_len -1;
+    
+    let _section = interpolate_vec2(data[tl][sec][2], data[tl][sec][data[tl][sec].length -3], divisions);
+
+    for (let vert = 0; vert < _section.length; vert++ ){
+        _data[tl][sec][vert+2] = _section[vert];
     }
 }
 

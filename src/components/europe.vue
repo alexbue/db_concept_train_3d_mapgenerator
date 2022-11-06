@@ -33,7 +33,7 @@ export default {
             // GUI CONTROLS:
             GUI_CONTROLS: new function () {
                 this.GLOBAL_MIX = 1;
-                this.GLOBAL_DEBUG_MODE = true;
+                this.GLOBAL_DEBUG_ON = true;
                 this.IN_OUT_DISTANCE = 0.03;
                 this.IN_OUT_ANGLE = 45;
                 this.IN_OUT_ALIGNMENT_DISTANCE = 0.004;
@@ -258,7 +258,7 @@ export default {
             folder.open();
             let folder2 = this.GUI.addFolder("globals");
             folder2.add(this.GUI_CONTROLS, 'GLOBAL_MIX', 0, 1).name('GLOBAL MIX').onChange(() => { this.update_data() });
-            folder2.add(this.GUI_CONTROLS, "GLOBAL_DEBUG_MODE").name("DEBUG MODE").onChange(() => {this.update_data(); console.log(this.GUI_CONTROLS.GLOBAL_DEBUG_MODE);});
+            folder2.add(this.GUI_CONTROLS, "GLOBAL_DEBUG_ON").name("DEBUG MODE").onChange(() => {this.update_data(); console.log(this.GUI_CONTROLS.GLOBAL_DEBUG_ON);});
             folder2.add(this.GUI_RESET, "GUI_RESET").name("RESET MODIFIER").onChange(() => { this.reset_gui(); this.update_data() });            
             folder2.open();
             let folder3 = this.GUI.addFolder("camera");
@@ -838,7 +838,7 @@ export default {
                 this.scene.add(this.data_mesh_debug_pnts[m]);
             }
 
-            if (this.GUI_CONTROLS.GLOBAL_DEBUG_MODE){
+            if (this.GUI_CONTROLS.GLOBAL_DEBUG_ON){
             // section points
             for (let m = 0; m < this.data_mesh_trainlines.length; m++) {
                 for (let n = 0; n < this.data_mesh_trainlines[m].length; n++) {

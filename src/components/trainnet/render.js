@@ -12,7 +12,7 @@ const scene = globals.scene;
 
 export function show_hide(objects){
     for(let o = 0; o < objects.length; o++){
-        objects[o].visible = globals.GUI_CONTROLS.GLOBAL_DEBUG_MODE;
+        objects[o].visible = globals.GUI_CONTROLS.GLOBAL_DEBUG_ON;
     }
 }
 
@@ -36,7 +36,7 @@ export function update_render() {
 
 function render(){
 
-    let debug_mode = globals.GUI_CONTROLS.GLOBAL_DEBUG_MODE;
+    let debug_mode = globals.GUI_CONTROLS.GLOBAL_DEBUG_ON;
 
     const a = globals.data_mesh_trainlines;
     const b = globals.data_mesh_debug_pnts;
@@ -86,7 +86,7 @@ function create_meshes(data) {
             sections.push(line_section);
 
             for (let vert = 0; vert < data[tl][sec].length; vert++) {
-                
+
                 let con = create_debug_point(data[tl][sec][vert], tl);
                 connections.push(con);
             }

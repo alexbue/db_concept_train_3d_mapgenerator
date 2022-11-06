@@ -41,9 +41,6 @@ export const globals = {
     axes_helper: null,
     
     
-
-
-
     GUI: null,
 
     // GUI CONTROLS:
@@ -53,16 +50,16 @@ export const globals = {
         this.station_sectors = 8;
         this.station_sector_offset = 0;
 
+        // processing
+        this.section_offset = 0.000;
+
         // globals
         this.GLOBAL_MIX = 1;
 
         // debug
-        this.GLOBAL_DEBUG_MODE = true;
-        this.GLOBAL_GRID_MODE = true;
-        this.GLOBAL_AXIS_MODE = true;
-
-        // processing
-        this.section_offset = 0.000;
+        this.GLOBAL_DEBUG_ON = true;
+        this.GLOBAL_GRID_ON = true;
+        this.GLOBAL_AXIS_ON = false;
 
         // old 
         this.IN_OUT_DISTANCE = 0.03;
