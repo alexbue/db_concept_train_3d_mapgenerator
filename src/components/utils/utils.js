@@ -33,31 +33,63 @@ export function clamp(num, min, max) {
 }
 
 export function get_angle(a, b) { 
-
-    return -Math.atan2((b.x - a.x), (b.y - a.y)) * 180 / Math.PI; // (b.x - a.x), (b.y - a.y) swapped! 
+    let angle = -Math.atan2((b.x - a.x), (b.y - a.y)) * 180 / Math.PI; // (b.x - a.x), (b.y - a.y) swapped! 
+    if (angle < 0) angle += 360;
+    return angle;
 }
 
 export function get_quadrant(a, b, sectors=globals.GUI_CONTROLS.station_sectors){
 
     let sector_angle = 360 / sectors;
-    let current = get_angle(a, b);
-    if (current < 0) current += 360;
+    let current = get_angle(a, b);    
     return Math.floor(current / sector_angle);
 }
 
 export function rotate_by_quadrant(a, b, sectors=globals.GUI_CONTROLS.station_sectors) {
-    let sector_angle = 360 / sectors;
+
+    let _a = a.clone();
+    let _b = b.clone();
+    
+    let sector_angle = 360 / sectors;    
     let offset = sector_angle * globals.GUI_CONTROLS.station_sector_offset;
-    let current = get_angle(a, b);
-    let target = sector_angle + (get_quadrant(a, b) * sector_angle) - offset;
-    let rotated = b.rotateAround(a, THREE.MathUtils.degToRad(target - current));
-    return rotated;
+
+    let current = get_angle(_a, _b);
+
+    let target = sector_angle + (get_quadrant(_a, _b) * sector_angle) - offset;
+
+    let _new = _b.rotateAround(_a, THREE.MathUtils.degToRad(target - current));
+    
+    return _new;
 }
 
 
-export function shift_vector_by_offset(a){   
+export function shift_vector_ordered_by_offset(a, b, order, sector_length){
 
-    return a.clone().add(new THREE.Vector2(0, globals.GUI_CONTROLS.section_offset));
+    // console.log("sector length", sector_length);
+    // console.log("% 2", sector_length%2);
+    let _center_offset = ( sector_length / 2 ) + 0.5;
+    let _order = order - _center_offset;
+    // console.log("order", order, "center_offset",  _center_offset, "_order:", _order )
+    let scal = globals.GUI_CONTROLS.io_section_offset * _order ;
+
+    let _o = b.clone().rotateAround(a, THREE.MathUtils.degToRad(90)).sub(a).normalize().multiplyScalar(scal);
+
+    return [a.clone().add(_o), _o]; 
+}
+
+export function shift_vector_by_offset_vec2(a, b){   
+
+    return a.clone().add(b);
+}
+
+export function shift_vector_by_offset_x(a){   
+
+    return a.clone().add(new THREE.Vector2(0, globals.GUI_CONTROLS.middle_section_offset_x));
+}
+
+export function shift_vector_by_offset_y(a){   
+
+    return a.clone().add(new THREE.Vector2(globals.GUI_CONTROLS.middle_section_offset_y, 0));
 }
 
 export function update_distance(p1, p2, distance=globals.GUI_CONTROLS.IN_OUT_DISTANCE) {

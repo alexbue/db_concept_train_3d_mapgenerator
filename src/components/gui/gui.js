@@ -31,16 +31,15 @@ export function init_gui() {
 
     // GUI
     let folder = globals.GUI.addFolder("modifier");
-    folder.add(globals.GUI_CONTROLS, 'section_offset', -0.01, 0.01, 0.001).onChange(() => { globals.update() });
+    folder.add(globals.GUI_CONTROLS, 'middle_section_offset_x', -0.01, 0.01, 0.001).onChange(() => { globals.update(true) });
+    folder.add(globals.GUI_CONTROLS, 'middle_section_offset_y', -0.01, 0.01, 0.001).onChange(() => { globals.update(true) });
+    folder.add(globals.GUI_CONTROLS, 'io_section_offset', 0, 0.01, 0.001).name("station i/o offset ").onChange(() => { globals.update(true) });
+    // folder.add(globals.GUI_CONTROLS, 'io_section_distance', 0, 0.03, 0.001).name("station io distance").onChange(() => { globals.update(true) });
 
-    // folder.add(globals.GUI_CONTROLS, 'IN_OUT_DISTANCE', 0.005, 0.04).onChange(() => { globals.update() });
-    // folder.add(globals.GUI_CONTROLS, 'IN_OUT_ANGLE', 1, 89).onChange(() => { globals.update() });
-    // folder.add(globals.GUI_CONTROLS, 'IN_OUT_ALIGNMENT_DISTANCE', 0.004, 0.02).onChange(() => { globals.update() });
-    // folder.add(globals.GUI_CONTROLS, 'IN_OUT_ALIGN_ANGLE', 1, 89).onChange(() => { globals.update() });
     folder.open();
 
     let folder2 = globals.GUI.addFolder("station modifier");
-    folder2.add(globals.GUI_CONTROLS, 'station_sectors', 1, 32, 1).name('STATION SECTORS').onChange(() => { globals.update(true);  });
+    folder2.add(globals.GUI_CONTROLS, 'station_sectors', 1, 32, 1).name('STATION SECTORS').onChange(() => { globals.update(true); console.log(globals.GUI_CONTROLS.station_sectors); });
 
     folder2.add(globals.GUI_CONTROLS, 'station_sector_offset', 0, 1, 0.01).name('SECTOR OFFSET').onChange(() => { 
         globals.update(true);  
@@ -62,7 +61,7 @@ export function init_gui() {
         show_hide(globals.data_mesh_debug_pnts);
         });
 
-    folder4.add(globals.GUI_RESET, "GUI_RESET").name("RESET MODIFIER").onChange(() => { reset_gui(); globals.update() });
+    folder4.add(globals.GUI_RESET, "GUI_RESET").name("RESET MODIFIER").onChange(() => { reset_gui(); globals.update(true) });
     folder4.open();
 
     let folder5 = globals.GUI.addFolder("camera");
@@ -71,13 +70,32 @@ export function init_gui() {
 
 }
 
-export function reset_gui(){
+function reset_gui(){
 
-    globals.GUI_CONTROLS.GLOBAL_MIX = 1; 
-    globals.GUI_CONTROLS.IN_OUT_DISTANCE = 0.03;
-    globals.GUI_CONTROLS.IN_OUT_ANGLE = 45;
-    globals.GUI_CONTROLS.IN_OUT_ALIGNMENT_DISTANCE = 0.002;
-    globals.GUI_CONTROLS.IN_OUT_ALIGN_ANGLE = 30;
+     // station build modifier
+     globals.GUI_CONTROLS.station_sectors = 8;
+     globals.GUI_CONTROLS.station_sector_offset = 0;
+
+     // processing
+     globals.GUI_CONTROLS.middle_section_offset_x = 0.000;
+     globals.GUI_CONTROLS.middle_section_offset_y = 0.000;
+
+     globals.GUI_CONTROLS.io_section_offset = 0.005;
+     globals.GUI_CONTROLS.io_section_distance = 0.015;
+
+     // globals
+     globals.GUI_CONTROLS.GLOBAL_MIX = 1;
+
+     // debug
+     globals.GUI_CONTROLS.GLOBAL_DEBUG_ON = true;
+     globals.GUI_CONTROLS.GLOBAL_GRID_ON = true;
+     globals.GUI_CONTROLS.GLOBAL_AXIS_ON = false;
+
+     // old 
+     globals.GUI_CONTROLS.IN_OUT_DISTANCE = 0.03;
+     globals.GUI_CONTROLS.IN_OUT_ANGLE = 45;
+     globals.GUI_CONTROLS.IN_OUT_ALIGNMENT_DISTANCE = 0.004;
+     globals.GUI_CONTROLS.IN_OUT_ALIGN_ANGLE = 30;
     
     // refresh GUI values manually
     for (var i = 0; i < Object.keys(globals.GUI.__folders).length; i++) {

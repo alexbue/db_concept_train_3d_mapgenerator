@@ -32,7 +32,7 @@ export function unpack_data(cities, trainlines) {
     globals.data_tl_trainnet = trainlines_vectors2;
     globals.data_tl_stations = trainlines_stations;
 
-    return [ trainlines_vectors2, trainlines_stations ];
+    return;
 }
 
 function create_station_data(occ, station, data, vec2, sectors=globals.GUI_CONTROLS.station_sectors){
@@ -42,8 +42,80 @@ function create_station_data(occ, station, data, vec2, sectors=globals.GUI_CONTR
     occ[data[station]["city"]].lng =  data[station]["lng"];
     occ[data[station]["city"]].lat =  data[station]["lat"];
     occ[data[station]["city"]].vec2 = vec2;
-    occ[data[station]["city"]].quadrants = new Array(sectors).fill(0);
-    occ[data[station]["city"]].q_current = new Array(sectors).fill(0);
+    occ[data[station]["city"]].sectors = new Array(sectors).fill(null);
+}
+
+export function rebuild_stations(stations=globals.data_tl_stations, sectors=globals.GUI_CONTROLS.station_sectors){
+
+    for (let s in stations){
+        stations[s].sectors = new Array(sectors).fill(null);
+    }
+}
+
+export function insert_sector_angle(sector, angle, vector){
+
+    let station = get_station_by_vector(vector);
+
+    if(station != undefined){ // no station found by vector
+
+        if ( station.sectors[sector] == null ) {
+             station.sectors[sector] = [];
+       }       
+       station.sectors[sector].push(angle);
+       station.sectors[sector].sort();   
+    }
+}
+
+
+function get_station_by_vector(vec){
+
+    let stations =  globals.data_tl_stations;
+
+    for (let s in stations){       
+        if ( stations[s].vec2.equals(vec)){
+            return stations[s];        
+        }
+    }
+}
+
+export function get_sector_info(station_vec, sector, angle, reverse){
+
+
+    let station = get_station_by_vector(station_vec);    
+    let _len = station.sectors[sector].length;
+    let _order = get_sector_order_by_angle(station.sectors[sector], angle, reverse);
+    _order += 1;
+    
+    // _order:  station sectors rails order as int of [1,2,3, ...] 
+    // _len:    total amount of rails in this station sector
+    return [_order, _len] ; 
+}
+
+function get_sector_order_by_angle(station_sectors, angle, reverse){
+    
+    let _order = 0;
+
+    if (!reverse){
+        for(let o = 0; o < station_sectors.length; o++){
+        
+            if(station_sectors[o] === angle){
+                _order = o;
+                station_sectors[o] = -1;
+                break;
+            }
+        }
+    }
+    else{
+        for(let o = station_sectors.length-1; o >= 0; o--){
+        
+            if(station_sectors[o] === angle){
+                _order = o;
+                station_sectors[o] = -1;
+                break;
+            }
+        }
+    }
+    return _order;
 }
 
 
@@ -54,16 +126,8 @@ function create_station_data(occ, station, data, vec2, sectors=globals.GUI_CONTR
 
 
 
-
-
-
-
-
-
-
-
-
-
+// 5 808 491 106 007
+// 1 / 1000000000000
 
 
 
@@ -138,7 +202,7 @@ function create_station_data(occ, station, data, vec2, sectors=globals.GUI_CONTR
                                         "lng": "13.3833", 
                                         "xyz_coordinates": "vector3",
                                         "sum_edges": 5,
-                                        "quadrants": [0,0,1,2]
+                                        "sectors": [0,0,1,2]
                                         }
                                     }
                                 ]
@@ -149,7 +213,7 @@ function create_station_data(occ, station, data, vec2, sectors=globals.GUI_CONTR
                                 globals.trainline_occupancies[cities[t]["city"]].lng = cities[t]["lng"];
                                 globals.trainline_occupancies[cities[t]["city"]].lat= cities[t]["lat"];
                                 globals.trainline_occupancies[cities[t]["city"]].vec3 = vec;
-                                globals.trainline_occupancies[cities[t]["city"]].quadrant = [0,0,0,0];
+                                globals.trainline_occupancies[cities[t]["city"]].sector = [0,0,0,0];
                                 globals.trainline_occupancies[cities[t]["city"]].sum = [0,0,0,0];
                             }
                         }
@@ -159,7 +223,7 @@ function create_station_data(occ, station, data, vec2, sectors=globals.GUI_CONTR
                 }
     
                 // console.log(globals.trainline_occupancies);
-                globalset_station_quadrants();
+                globalset_station_sectors();
                 // console.log(this.trainline_occupancies);           
                 
                 this.cities_vectors2 = trainlines_vector2;
@@ -214,43 +278,43 @@ function create_station_data(occ, station, data, vec2, sectors=globals.GUI_CONTR
 
             if (coordinates.equals(vec[0])){
 
-                // console.log(globals.trainline_occupancies[key].quadrant);
+                // console.log(globals.trainline_occupancies[key].sector);
 
-                let quadrant_index = get_quadrant(vec[0], vec[1]);
-                let sum = globals.trainline_occupancies[key].sum[quadrant_index];
-                let quadrant = globals.trainline_occupancies[key].quadrant[quadrant_index];
+                let sector_index = get_sector(vec[0], vec[1]);
+                let sum = globals.trainline_occupancies[key].sum[sector_index];
+                let sector = globals.trainline_occupancies[key].sector[sector_index];
 
                 // console.log(sum);
-                // console.log(quadrant);
+                // console.log(sector);
 
-                let res = this.update_rail_distance(vec[0], vec[2], sum, quadrant);
+                let res = this.update_rail_distance(vec[0], vec[2], sum, sector);
                 
                 vec[1] = res[0];         
                 vec[2] = res[1];   
 
-                globals.trainline_occupancies[key].quadrant[quadrant_index] += 1;     
+                globals.trainline_occupancies[key].sector[sector_index] += 1;     
                 }  
 
             if (coordinates.equals(vec[len - 1])){
 
-                // console.log(this.trainline_occupancies[key].quadrant);
+                // console.log(this.trainline_occupancies[key].sector);
 
-                let quadrant_index = get_quadrant(vec[len - 1], vec[len - 2]);
-                let sum = globals.trainline_occupancies[key].sum[quadrant_index];
+                let sector_index = get_sector(vec[len - 1], vec[len - 2]);
+                let sum = globals.trainline_occupancies[key].sum[sector_index];
 
-                // sum = (sum - quadrant) + 1;
+                // sum = (sum - sector) + 1;
 
-                let quadrant = globals.trainline_occupancies[key].quadrant[quadrant_index];
+                let sector = globals.trainline_occupancies[key].sector[sector_index];
 
                 // console.log(sum);
-                // console.log(quadrant);
+                // console.log(sector);
 
-                let res = this.update_rail_distance(vec[len - 1], vec[len - 3], sum, sum-quadrant);
+                let res = this.update_rail_distance(vec[len - 1], vec[len - 3], sum, sum-sector);
 
                 vec[len - 2]= res[0];         
                 vec[len - 3] = res[1];   
 
-                globals.trainline_occupancies[key].quadrant[quadrant_index] += 1;     
+                globals.trainline_occupancies[key].sector[sector_index] += 1;     
                 }  
 
             });

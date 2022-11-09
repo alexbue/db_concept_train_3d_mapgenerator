@@ -58,7 +58,7 @@ export default {
         fetch(stations).then((response) => {
             response.json().then((data) => {
 
-                unpack_data(data, trainlines);                
+                unpack_data(data, trainlines);          
                 this.build();
 
             })

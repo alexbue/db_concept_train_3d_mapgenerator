@@ -2,33 +2,54 @@
 
 // import * as THREE from 'three';
 // import { globals }from '@/components/globals.js';
-import { interpolate_vec2, get_quadrant, rotate_by_quadrant, weighted_average, shift_vector_by_offset }from '@/components/utils/utils.js';
-import { globals } from '../globals';
 
-const data_tl_trainnet = globals.data_tl_trainnet;
-const data_tl_stations = globals.data_tl_stations;
+import { 
+    interpolate_vec2, 
+    get_quadrant, get_angle, 
+    rotate_by_quadrant, 
+    weighted_average, 
+    shift_vector_by_offset_x, 
+    shift_vector_by_offset_y, 
+    shift_vector_ordered_by_offset,
+    shift_vector_by_offset_vec2
+ } from '@/components/utils/utils.js';
+
+import { globals } from '../globals';
+import { get_station_by_vector, 
+    insert_sector_angle, 
+    get_sector_info,
+    rebuild_stations,
+} from '@/components/trainnet/data';
 
 
 export function init_data(){
-
+    
     globals.data_tl_trainnet = subdivide_data(globals.data_tl_trainnet, 5)
 }
 
 export function build_data(){
 
     globals.data_tl_trainnet_build = clone_data(globals.data_tl_trainnet);
-    unpack_sections_with_stations(globals.data_tl_trainnet_build, globals.data_tl_stations, set_station_sector_rails);  
-}
+    rebuild_stations();
+
+    build_station_sectors( globals.data_tl_trainnet_build );
+    rot_station_sectors(   globals.data_tl_trainnet_build );   
+    
+    }
 
 export function process_data(){
 
-    let data = globals.data_tl_trainnet_build;  
-    let _data = clone_data(data);
+    let  data = clone_data(globals.data_tl_trainnet);
+    let _data = clone_data(globals.data_tl_trainnet_build);  
 
-    _data = process_sections(data, _data, shift_sections);  
-    _data = process_sections(_data, _data, straighten_sections);  
+    _data = ordered_shift_io_sections(data, _data);
+
+    _data = process_sections(_data, _data, shift_middle_sections);  
+    _data = process_sections(_data, _data, straighten__middle_sections);  
+   
 
     globals.data_tl_trainnet_process = _data;
+
     update_view_data();
 }
 
@@ -61,6 +82,7 @@ function update_view_data(){
     }
 }
 
+
 function clone_data(data){ // 5x faster than structuredClone() :)
 
     let _data = [];
@@ -85,6 +107,96 @@ function clone_data(data){ // 5x faster than structuredClone() :)
 }
 
 
+function ordered_shift_io_sections(d, _d){ // set ordered alignment offset for incoming/outgoing sections of stations
+
+    let  data = clone_data(d);
+    let _data = clone_data(_d);
+
+    for (let tl = 0; tl < data.length; tl++) {
+
+        for (let sec = 0; sec < data[tl].length; sec++) {
+
+            let len = data[tl][sec].length;
+
+            // station a 
+            let _off = null;
+            [ _data[tl][sec][1], _off ] = ordered_shift(data[tl][sec][0], _data[tl][sec][0], data[tl][sec][1], _data[tl][sec][1], false);
+            _data[tl][sec][2].add(_off);
+            
+            // station b
+            [ _data[tl][sec][len-2], _off ] = ordered_shift(data[tl][sec][len-1], _data[tl][sec][len-1], data[tl][sec][len-2], _data[tl][sec][len-2], true);
+            _data[tl][sec][len-3].add(_off);
+        }
+    }
+    return _data;  
+}
+
+function ordered_shift(ax_vec, _ax_vec, p_vec, _p_vec, reverse=false){
+
+    let _p = null, _off = null, _order = null, _sector_length = null;
+
+    let angle =       get_angle(ax_vec, p_vec);
+    let quadrant = get_quadrant(ax_vec, p_vec);
+    
+    [_order, _sector_length] = get_sector_info(ax_vec, quadrant, angle, reverse);
+    _order += 1;
+
+    [ _p, _off ] = shift_vector_ordered_by_offset(_ax_vec, _p_vec, _order, _sector_length);
+    return [ _p, _off ];
+}
+
+
+function build_station_sectors(data){
+    
+    for (let tl = 0; tl < data.length; tl++) {
+
+        for (let sec = 0; sec < data[tl].length; sec++) {
+
+            let station_a = data[tl][sec][0];
+            let station_b = data[tl][sec][data[tl][sec].length-1];
+
+            // station a 
+            let a_angle = get_angle(station_a, station_b);
+            let a_quadrant = get_quadrant(station_a, station_b);
+            insert_sector_angle(a_quadrant, a_angle, station_a);
+
+             // station b 
+            let b_angle = get_angle(station_b, station_a);
+            let b_quadrant = get_quadrant(station_b, station_a);
+            insert_sector_angle(b_quadrant, b_angle, station_b);
+        }
+    }
+ }
+
+ function rot_station_sectors(data){
+
+    for (let tl = 0; tl < data.length; tl++) {
+
+        for (let sec = 0; sec < data[tl].length; sec++) {
+
+            let len = data[tl][sec].length;
+
+            // station a 
+            let station_a = data[tl][sec][0];
+            let point_a =   data[tl][sec][1];
+
+            data[tl][sec][1] = rotate_by_quadrant(station_a , point_a)
+            data[tl][sec][2] = rotate_by_quadrant(station_a , point_a)
+
+            //station b 
+            let station_b  = data[tl][sec][len-1];
+            let point_b =    data[tl][sec][len-2];     
+
+            data[tl][sec][len-2] = rotate_by_quadrant(station_b, point_b)
+            data[tl][sec][len-3] = rotate_by_quadrant(station_b, point_b);
+        }
+    }
+ }
+
+
+
+
+
 // unpack vertices from data arrays 
 
 function process_sections(data, _data, func){
@@ -97,17 +209,6 @@ function process_sections(data, _data, func){
         }
     }
     return _data;
-}
-
-function unpack_sections_with_stations(data, stations, func){
-
-    for (let tl = 0; tl < data.length; tl++) {
-
-        for (let section = 0; section < data[tl].length; section++) {
-
-            func(data[tl][section], section, stations, tl);
-        }
-    }
 }
 
 
@@ -132,117 +233,31 @@ function subdivide_data(data, divisions){
 }
 
 
-function shift_sections(data, _data, tl, sec){ // set offset for middle section 
+
+
+function shift_middle_sections(data, _data, tl, sec){ // set offset for middle section 
 
     for (let vert = 2; vert < data[tl][sec].length-2; vert++ ){
 
-        _data[tl][sec][vert] = shift_vector_by_offset(data[tl][sec][vert]); 
+        _data[tl][sec][vert] = shift_vector_by_offset_x( data[tl][sec][vert]); 
+        _data[tl][sec][vert] = shift_vector_by_offset_y(_data[tl][sec][vert]); 
     }
 }
 
-function straighten_sections(data, _data, tl, sec){   // straighten middle section 
+function straighten__middle_sections(data, _data, tl, sec){   // straighten middle section 
 
     let mid_sec_len = data[tl][sec].length - 4; 
     let divisions = mid_sec_len -1;
-    
+
     let _section = interpolate_vec2(data[tl][sec][2], data[tl][sec][data[tl][sec].length -3], divisions);
 
     for (let vert = 0; vert < _section.length; vert++ ){
+
         _data[tl][sec][vert+2] = _section[vert];
     }
 }
 
 
-function set_station_sector_rails(section, section_id, stations, traintl_idx){
 
-    for (let s in stations){
-
-        if ( (stations[s].vec2.equals(section[0])) ){ // get station name by vector-coordinates 
-
-            let ax = section[0];
-            let pt = section[1];
-
-            pt = rotate_by_quadrant(ax, pt);
-            section[2] = pt.clone();
-        }
-        else if (stations[s].vec2.equals(section[section.length-1])){ // get station name by vector-coordinates 
-
-            let ax = section[section.length-1];
-            let pt = section[section.length-2];
-
-            pt = rotate_by_quadrant(ax, pt);
-            section[section.length-3] = pt.clone();
-        }
-    }
- }
-
-
-// export function write_station_quadrants(trainlines, station){
-
-
-//     stations.push([cities[station]["city"], vec2]);            
-
-//     for (let line = 0; line < trainlines.length; line++) {
-
-//         for (let section = 0; section < trainlines[line].length; section++) {
-
-//             for(let s = 0; s < stations.length; s++){
-
-//                 let station = occ[stations[s][0]];
-//                 let station_vert = stations[s][1];
-        
-//                 if (s == 0) { // check outgoing connection
-        
-//                     set_quadrants(station_vert, stations[s+1][1], station);        
-//                 }
-//                 else if (s == stations.length-1) { // check incoming connection
-        
-//                     set_quadrants(station_vert, stations[s-1][1], station);
-//                 } 
-//                 else { //  check in+out connection
-        
-//                     set_quadrants(station_vert, stations[s+1][1], station);  
-//                     set_quadrants(station_vert, stations[s-1][1], station);
-//                 }
-//             }  
-
-//         }
-//     }
-// }
-
-// function set_quadrants(a, b, station){
-
-//     station.quadrants[get_quadrant(a, b)] +=1;
-//     station.q_current = station.quadrants;
-// }
-
-
-
-
-/* 
-
- let axis = new THREE.Vector2(p1.x, p1.z);
-    let point = new THREE.Vector2(p2.x, p2.z);
-    
-    let distance = axis.distanceTo(point);
-
-    let d = this.GUI_CONTROLS.IN_OUT_ALIGNMENT_DISTANCE;
-
-    if (sum % 2 == 0){ // even number of rails
-        d = (rail * d) - (2 * d);
-    }
-    else{ // odd number of rails
-        d = (rail * d) - (1 * d);
-    }
-
-    if ( d < 0) distance *= -1;
-
-    let vec1 =  point.rotateAround(axis, -THREE.MathUtils.degToRad(-90));
-    vec1 = this.update_distance(p1, new THREE.Vector3(vec1.x, p1.y, vec1.y), d);
-    let vec2 = axis.rotateAround(new THREE.Vector2(vec1.x, vec1.z), -THREE.MathUtils.degToRad(-90));
-    vec2 = this.update_distance(vec1, new THREE.Vector3(vec2.x, p1.y, vec2.y), distance);
-    return [vec1, vec2];
-
-*/
 
 

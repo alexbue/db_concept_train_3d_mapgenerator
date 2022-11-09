@@ -18,10 +18,13 @@ export const globals = {
     update: null, // global app (vue) update - declared in main.vue at init 
 
     data_tl_trainnet: null,
+
     data_tl_trainnet_build: null,
     data_tl_trainnet_process: null,
     data_tl_trainnet_view: null,
-    data_tl_stations: {},   
+
+    data_tl_stations: {}, 
+    data_tl_stations_build: {},  
    
     data_mesh_debug_pnts: [],
     data_mesh_trainlines: [],
@@ -51,7 +54,11 @@ export const globals = {
         this.station_sector_offset = 0;
 
         // processing
-        this.section_offset = 0.000;
+        this.middle_section_offset_x = 0.000;
+        this.middle_section_offset_y = 0.000;
+
+        this.io_section_offset = 0.005;
+        this.io_section_distance = 0.015;
 
         // globals
         this.GLOBAL_MIX = 1;
@@ -118,14 +125,17 @@ export const globals = {
     TRAINLINES: [
         ["München", "Stuttgart", "Leipzig"],
         ["München", "Leipzig"],
+        ["München", "Leipzig", "Hamburg"],
         ["München", "Nürnberg", "Leipzig", "Berlin", "Hamburg"],
-        // ["München", "Stuttgart", "Frankfurt", "Leipzig"],
+        // ["Nürnberg", "Stuttgart", "Frankfurt", "Leipzig"],
+        // ["Leipzig", "Nürnberg", "Frankfurt"],
+        // ["Frankfurt", "München", "Stuttgart"],
+        // ["Hamburg", "Stuttgart", "Frankfurt", "Leipzig"],
         // ["München", "Nürnberg", "Frankfurt"],
         // ["München", "Stuttgart", "Frankfurt"],
-        // ["München", "Stuttgart", "Frankfurt", "Leipzig", "Hamburg"],
-        // ["München", "Nürnberg", "Frankfurt", "Hamburg"],
-        // ["München", "Stuttgart", "Frankfurt", "Hamburg"],
-        // ["München", "Leipzig", "Hamburg"],
+
+       
+
     ],
 
 
