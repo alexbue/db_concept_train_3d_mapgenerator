@@ -81,7 +81,7 @@ function get_station_by_vector(vec){
 export function get_sector_info(station_vec, sector, angle, reverse){
 
 
-    let station = get_station_by_vector(station_vec);    
+    let station = get_station_by_vector(station_vec);   
     let _len = station.sectors[sector].length;
     let _order = get_sector_order_by_angle(station.sectors[sector], angle, reverse);
     _order += 1;
@@ -97,8 +97,7 @@ function get_sector_order_by_angle(station_sectors, angle, reverse){
 
     if (!reverse){
         for(let o = 0; o < station_sectors.length; o++){
-        
-            if(station_sectors[o] === angle){
+            if(station_sectors[o].toFixed(12) == angle.toFixed(12)){
                 _order = o;
                 station_sectors[o] = -1;
                 break;
@@ -108,7 +107,7 @@ function get_sector_order_by_angle(station_sectors, angle, reverse){
     else{
         for(let o = station_sectors.length-1; o >= 0; o--){
         
-            if(station_sectors[o] === angle){
+            if(station_sectors[o].toFixed(12) == angle.toFixed(12)){
                 _order = o;
                 station_sectors[o] = -1;
                 break;

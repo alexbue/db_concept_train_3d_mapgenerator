@@ -34,6 +34,7 @@ export function init_gui() {
     folder.add(globals.GUI_CONTROLS, 'middle_section_offset_x', -0.01, 0.01, 0.001).onChange(() => { globals.update(true) });
     folder.add(globals.GUI_CONTROLS, 'middle_section_offset_y', -0.01, 0.01, 0.001).onChange(() => { globals.update(true) });
     folder.add(globals.GUI_CONTROLS, 'io_section_offset', 0, 0.01, 0.001).name("station i/o offset ").onChange(() => { globals.update(true) });
+    folder.add(globals.GUI_CONTROLS, 'entry_section_distance', 0, 0.06, 0.001).name("station entry distance ").onChange(() => { globals.update(true) });
     // folder.add(globals.GUI_CONTROLS, 'io_section_distance', 0, 0.03, 0.001).name("station io distance").onChange(() => { globals.update(true) });
 
     folder.open();

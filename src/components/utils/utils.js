@@ -64,13 +64,21 @@ export function rotate_by_quadrant(a, b, sectors=globals.GUI_CONTROLS.station_se
 
 
 export function shift_vector_ordered_by_offset(a, b, order, sector_length){
+    
 
-    // console.log("sector length", sector_length);
-    // console.log("% 2", sector_length%2);
-    let _center_offset = ( sector_length / 2 ) + 0.5;
+
+    let _center_offset = ( sector_length / 2 ) + 1.5;
     let _order = order - _center_offset;
-    // console.log("order", order, "center_offset",  _center_offset, "_order:", _order )
     let scal = globals.GUI_CONTROLS.io_section_offset * _order ;
+
+    // if (sector_length >= 3){
+    //     console.log("sector_length", sector_length);
+    //     console.log("order", order);
+    //     console.log("_center_offset = ( sector_length / 2 ) + 0.5;", _center_offset);
+    //     console.log("_order = order - _center_offset", _order);
+    //     console.log("scal = globals.GUI_CONTROLS.io_section_offset * _order", scal);
+    // }
+ 
 
     let _o = b.clone().rotateAround(a, THREE.MathUtils.degToRad(90)).sub(a).normalize().multiplyScalar(scal);
 
@@ -98,6 +106,10 @@ export function update_distance(p1, p2, distance=globals.GUI_CONTROLS.IN_OUT_DIS
     let point = new THREE.Vector2(p2.x, p2.z);
     point = point.sub(station).normalize().multiplyScalar(distance).add(station);
     return new THREE.Vector3(point.x, p1.y, point.y);
+}
+
+export function update_distance2(p1, p2, distance) {
+    return p2.clone().sub(p1).normalize().multiplyScalar(distance).add(p1);
 }
 
 export function geometry_rotate_to_scene(geometry){

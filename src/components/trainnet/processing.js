@@ -11,7 +11,8 @@ import {
     shift_vector_by_offset_x, 
     shift_vector_by_offset_y, 
     shift_vector_ordered_by_offset,
-    shift_vector_by_offset_vec2
+    shift_vector_by_offset_vec2,
+    update_distance2,
  } from '@/components/utils/utils.js';
 
 import { globals } from '../globals';
@@ -32,9 +33,9 @@ export function build_data(){
     globals.data_tl_trainnet_build = clone_data(globals.data_tl_trainnet);
     rebuild_stations();
 
+
     build_station_sectors( globals.data_tl_trainnet_build );
     rot_station_sectors(   globals.data_tl_trainnet_build );   
-    
     }
 
 export function process_data(){
@@ -44,10 +45,10 @@ export function process_data(){
 
     _data = ordered_shift_io_sections(data, _data);
 
+    _data = process_sections(_data, _data, shift_station_entry_distance); 
     _data = process_sections(_data, _data, shift_middle_sections);  
     _data = process_sections(_data, _data, straighten__middle_sections);  
    
-
     globals.data_tl_trainnet_process = _data;
 
     update_view_data();
@@ -114,17 +115,19 @@ function ordered_shift_io_sections(d, _d){ // set ordered alignment offset for i
 
     for (let tl = 0; tl < data.length; tl++) {
 
+        let _order_sec = null;
+
         for (let sec = 0; sec < data[tl].length; sec++) {
 
             let len = data[tl][sec].length;
 
             // station a 
             let _off = null;
-            [ _data[tl][sec][1], _off ] = ordered_shift(data[tl][sec][0], _data[tl][sec][0], data[tl][sec][1], _data[tl][sec][1], false);
+            [ _data[tl][sec][1], _off, _order_sec ] = ordered_shift(data[tl][sec][0], _data[tl][sec][0], data[tl][sec][1], _data[tl][sec][1], false);
             _data[tl][sec][2].add(_off);
             
             // station b
-            [ _data[tl][sec][len-2], _off ] = ordered_shift(data[tl][sec][len-1], _data[tl][sec][len-1], data[tl][sec][len-2], _data[tl][sec][len-2], true);
+            [ _data[tl][sec][len-2], _off, _order_sec] = ordered_shift(data[tl][sec][len-1], _data[tl][sec][len-1], data[tl][sec][len-2], _data[tl][sec][len-2], true);
             _data[tl][sec][len-3].add(_off);
         }
     }
@@ -142,7 +145,7 @@ function ordered_shift(ax_vec, _ax_vec, p_vec, _p_vec, reverse=false){
     _order += 1;
 
     [ _p, _off ] = shift_vector_ordered_by_offset(_ax_vec, _p_vec, _order, _sector_length);
-    return [ _p, _off ];
+    return [ _p, _off, _order];
 }
 
 
@@ -232,8 +235,20 @@ function subdivide_data(data, divisions){
     return _data;
 }
 
+function shift_station_entry_distance(data, _data, tl, sec){ // set offset for middle section 
 
+    let len = _data[tl][sec].length;
 
+    let p1 = _data[tl][sec][1]
+    let p2 = _data[tl][sec][2]
+    
+    _data[tl][sec][2] = update_distance2(p1, p2, globals.GUI_CONTROLS.entry_section_distance);
+
+    p1 = _data[tl][sec][len-2]
+    p2 = _data[tl][sec][len-3]
+
+    _data[tl][sec][len-3] = update_distance2(p1, p2, globals.GUI_CONTROLS.entry_section_distance);
+}
 
 function shift_middle_sections(data, _data, tl, sec){ // set offset for middle section 
 
