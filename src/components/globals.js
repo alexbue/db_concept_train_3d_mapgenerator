@@ -50,16 +50,16 @@ export const globals = {
     GUI_CONTROLS: new function () {
 
         // station build modifier
-        this.station_sectors = 8;
-        this.station_sector_offset = 0;
+        this.station_sectors = 4;
+        this.station_sector_offset = 0.65;
 
         // processing
         
         this.middle_section_offset_x = 0.000;
         this.middle_section_offset_y = 0.000;
 
-        this.io_section_offset = 0.005;
-        this.entry_section_distance = 0.025;
+        this.io_section_offset = 0.003;
+        this.entry_section_distance = 0.028;
 
         // globals
         this.GLOBAL_MIX = 1;

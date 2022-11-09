@@ -93,11 +93,12 @@ export function get_sector_info(station_vec, sector, angle, reverse){
 
 function get_sector_order_by_angle(station_sectors, angle, reverse){
     
+    let decimal_precision = 8
     let _order = 0;
 
     if (!reverse){
         for(let o = 0; o < station_sectors.length; o++){
-            if(station_sectors[o].toFixed(12) == angle.toFixed(12)){
+            if(station_sectors[o].toFixed(decimal_precision) == angle.toFixed(decimal_precision)){
                 _order = o;
                 station_sectors[o] = -1;
                 break;
@@ -107,7 +108,7 @@ function get_sector_order_by_angle(station_sectors, angle, reverse){
     else{
         for(let o = station_sectors.length-1; o >= 0; o--){
         
-            if(station_sectors[o].toFixed(12) == angle.toFixed(12)){
+            if(station_sectors[o].toFixed(decimal_precision) == angle.toFixed(decimal_precision)){
                 _order = o;
                 station_sectors[o] = -1;
                 break;
